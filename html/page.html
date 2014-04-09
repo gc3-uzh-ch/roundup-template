@@ -139,7 +139,8 @@
                                          'assignee': request.user.id,
                                          '@dispname': i18n.gettext('Issues assigned to you'),
                                          '@startwith': 0})"
-                        i18n:translate="">Issues assigned to you</a>
+                        i18n:translate=""
+                 tal:condition="python: request.user.hasRole('Operator')">Issues assigned to you</a>
             </li>
             <li>
               <a tal:attributes="href string:user${request/user/id}" i18n:translate="">Your Details</a>
@@ -156,7 +157,9 @@
                 </li>
               </ul>
            </li>
-           <li class="" tal:condition="python:request.user.hasPermission('View', 'user')">
+           <li class=""
+               tal:condition="python:request.user.hasRole('Operator')
+               or request.user.hasRole('Admin')">
             <b i18n:translate="">Administration</b>
             <ul>
              <li tal:condition="python:request.user.hasPermission('Edit', None)">
@@ -222,6 +225,24 @@ See issue.search.html in the classic template for examples.
   <input tal:attributes="value python:request.form.getvalue(name) or nothing;
                          name name;
                          id name"/>
+</td>
+<td metal:define-macro="search_date">
+  <input tal:attributes="value python:request.form.getvalue(name) or nothing;
+                         name name;
+                         id name"/>
+  <a class="classhelp"
+        tal:attributes="href python:'''javascript:help_window('issue?@template=calendar&property=%s&form=itemSynopsis', 300, 200)'''%name">(cal)</a>
+</td>
+<td metal:define-macro="search_popup">
+  <!--
+    context needs to specify the popup "columns" as a comma-separated
+    string (eg. "id,title" or "id,name,description") as well as name
+  -->
+  <input tal:attributes="value python:request.form.getvalue(name) or nothing;
+                         name name;
+                         id name"/>
+  <span tal:replace="structure python:db.issue.classhelp(columns,
+                                      property=name)" />
 </td>
 
 
