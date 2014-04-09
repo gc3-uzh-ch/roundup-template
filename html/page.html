@@ -28,10 +28,7 @@
                    task_columns string:id,activity,title,creator,status;
                    task_columns_showall string:id,activity,title,creator,assignee,status;
                    task_status_notclosed string:-1,1,2,4;
-
-                   milestone_columns string:id,activity,title,creator,status;
-                   milestone_columns_showall string:id,activity,title,creator,assignee,status;
-                   milestone_status_notclosed string:-1,1,2,4;">
+                   ">
   <div class="navbar navbar-fixed-top">
     <div class='navbar-inner'>
       <div class='container'>
@@ -147,23 +144,6 @@
               <input type="hidden" name="@type" value="task"/>
               <input type="hidden" name="@action" value="show"/>
             </form>
-          </li>
-        </ul>
-        <hr>
-        <ul tal:condition="python:request.user.hasPermission('View', 'milestone')" class='nav nav-list'>
-          <li class='nav-header'><i class='icon-bullhorn'></i>Milestones</li>
-          <li><a href="milestone" i18n:translate="">Milestones</a></li>
-          <li tal:condition="python:request.user.hasPermission('Create', 'milestone')">
-            <a href="milestone?@template=item" i18n:translate="">Create New</a>
-          </li>
-          <li>
-            <a href="#" tal:attributes="href python:request.indexargs_url('milestone', {
-                                  '@filter': 'status',
-                                  'status': milestone_status_notclosed,
-                                  '@dispname': i18n.gettext('Show Open'),
-                                  '@startwith': 0,
-                                  })"
-                  i18n:translate="">Show Open</a>
           </li>
         </ul>
         <hr>

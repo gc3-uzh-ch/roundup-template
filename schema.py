@@ -182,12 +182,6 @@ task = IssueClass(db, "task",
                   resolution=Link('resolution'),
                   solves=Link('bug'))
 
-milestone = IssueClass(db, "milestone",
-                       bugs=Multilink("bug"),
-                       tasks=Multilink("task"),
-                       status=Link("status"),
-                       release_date=String())
-
 #
 # TRACKER SECURITY SETTINGS
 #
@@ -211,7 +205,7 @@ for r in 'User', 'Developer', 'Coordinator':
 
 for cl in ('severity', 'component',
            'version', 'priority', 'status', 'resolution',
-           'bug_type', 'bug', 'task_type', 'task', 'milestone',
+           'bug_type', 'bug', 'task_type', 'task', 
            'keyword', 'file', 'msg'):
     db.security.addPermissionToRole('User', 'View', cl)
     db.security.addPermissionToRole('Anonymous', 'View', cl)
@@ -259,13 +253,6 @@ p = db.security.addPermission(name='Edit', klass='task',
                               description='Developer can create and discuss tasks')
 db.security.addPermissionToRole('Developer', p)
 
-p = db.security.addPermission(name='Create', klass='milestone',
-                              description='Coordinator can create and discuss milestones')
-db.security.addPermissionToRole('Coordinator', p)
-
-p = db.security.addPermission(name='Edit', klass='milestone',
-                              description='Coordinator can create and discuss milestones')
-db.security.addPermissionToRole('Coordinator', p)
 
 
 ##########################

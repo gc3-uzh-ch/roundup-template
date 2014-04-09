@@ -126,8 +126,4 @@ def init(db):
     db.task.audit('create', updatenosy)
     db.task.audit('set', updatenosy)
 
-    db.milestone.react('create', nosyreaction)
-    db.milestone.react('set', nosyreaction)
-    db.milestone.audit('create', updatenosy)
-    db.milestone.audit('set', updatenosy)
 #SHA: 77f5bc49455c549affcb9dcabfa49e4f6ac9a92f
