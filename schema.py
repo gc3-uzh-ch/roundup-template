@@ -21,12 +21,6 @@ component = Class(db, 'component',
 component.setkey('name')
 
 
-# Severity
-severity = Class(db, 'severity',
-                 name=String(),
-                 description=String(),
-                 order=Number())
-severity.setkey('name')
 
 # Priority
 priority = Class(db, 'priority',
@@ -97,12 +91,6 @@ file = FileClass(db, "file",
                 name=String(),
                 description=String(indexme='yes'))
 
-# Issue Type
-issue_type = Class(db, 'issue_type',
-                 name=String(),
-                 description=String(),
-                 order=Number())
-issue_type.setkey('name')
 
 # IssueClass automatically gets these properties in addition to the Class ones:
 #   title = String()
@@ -111,9 +99,7 @@ issue_type.setkey('name')
 #   nosy = Multilink("user")
 #   superseder = Multilink("issue")
 issue = IssueClass(db, "issue",
-                 type=Link('issue_type'),
                  components=Multilink('component'),
-                 severity=Link('severity'),
                  priority=Link('priority'),
                  dependencies=Multilink('issue'),
                  assignee=Link('user'),
@@ -143,15 +129,14 @@ for r in 'User', 'Operator':
 # User permissions
 ##########################
 
-for cl in ('severity', 'component',
-           'priority', 'status', 'resolution',
-           'issue_type', 'issue', 
+for cl in ('component',
+           'priority', 'status', 'resolution', 'issue', 
            'keyword', 'file', 'msg'):
     db.security.addPermissionToRole('User', 'View', cl)
 
-for cl in ('severity', 'component',
+for cl in ('component',
            'priority', 'status', 'resolution',
-           'issue_type', 'issue', 'file', 'msg'):
+           'issue', 'file', 'msg'):
     db.security.addPermissionToRole('User', 'Create', cl)
     
 
@@ -165,17 +150,14 @@ p = db.security.addPermission(name='Edit', klass='file', check=checker('file'),
 db.security.addPermissionToRole('User', p)
 
 p = db.security.addPermission(name='Create', klass='issue',
-                              properties=('title', 'issue_type',
+                              properties=('title',
                                           'components',
-                                          'severity',
                                           'messages', 'files', 'nosy'),
                               description='User can report and discuss issues')
 db.security.addPermissionToRole('User', p)
 
 p = db.security.addPermission(name='Edit', klass='issue',
-                              properties=('title', 'issue_type',
-                                          'components',
-                                          'severity',
+                              properties=('title', 'components',
                                           'messages', 'files', 'nosy'),
                               description='User can report and discuss issues',
                               check=checker('issue'))
@@ -190,7 +172,7 @@ db.security.addPermissionToRole('User', p)
 ##########################
 # Operator permissions
 ##########################
-for cl in ('issue_type', 'severity', 'component',
+for cl in ('component',
            'priority', 'status', 'resolution', 'issue', 'file', 'msg'):
     db.security.addPermissionToRole('Operator', 'View', cl)
     db.security.addPermissionToRole('Operator', 'Edit', cl)

@@ -1,26 +1,28 @@
 <tal:block metal:use-macro="templates/page/macros/frame">
-<title metal:fill-slot="head_title">
-<tal:block condition="context/id" i18n:translate=""
- >Issue <span tal:replace="context/id" i18n:name="id"
- />: <span tal:replace="context/title" i18n:name="title"
- /> - <span tal:replace="config/TRACKER_NAME" i18n:name="tracker"
-/></tal:block>
-<tal:block condition="not:context/id" i18n:translate=""
- >New Issue - <span tal:replace="config/TRACKER_NAME" i18n:name="tracker"
-/></tal:block>
-</title>
-<tal:block metal:fill-slot="body_title">
- <span tal:condition="python: not (context.id or context.is_edit_ok())"
-  tal:omit-tag="python:1" i18n:translate="">New Issue</span>
- <span tal:condition="python: not context.id and context.is_edit_ok()"
-  tal:omit-tag="python:1" i18n:translate="">New Issue Editing</span>
- <span tal:condition="python: context.id and not context.is_edit_ok()"
-  tal:omit-tag="python:1" i18n:translate="">Issue <tal:x
-  replace="context/id" i18n:name="id" /></span>
- <span tal:condition="python: context.id and context.is_edit_ok()"
-  tal:omit-tag="python:1" i18n:translate="">Issue <tal:x
-  replace="context/id" i18n:name="id" /> Editing</span>
-</tal:block>
+  <title metal:fill-slot="head_title">
+    <tal:block condition="context/id" i18n:translate="">Issue
+    <span tal:replace="context/id" i18n:name="id"/>:
+    <span tal:replace="context/title" i18n:name="title"/> -
+    <span tal:replace="config/TRACKER_NAME"
+    i18n:name="tracker"/></tal:block>
+    <tal:block condition="not:context/id" i18n:translate="">New Issue
+      - <span tal:replace="config/TRACKER_NAME" i18n:name="tracker"/>
+    </tal:block>
+  </title>
+  <tal:block metal:fill-slot="body_title">
+    <span tal:condition="python: not (context.id or
+          context.is_edit_ok())" tal:omit-tag="python:1"
+          i18n:translate="">New Issue</span>
+    <span tal:condition="python: not context.id and context.is_edit_ok()"
+          tal:omit-tag="python:1" i18n:translate="">New Issue Editing</span>
+    <span tal:condition="python: context.id and not
+          context.is_edit_ok()" tal:omit-tag="python:1"
+          i18n:translate="">Issue <tal:x replace="context/id"
+          i18n:name="id" /></span>
+    <span tal:condition="python: context.id and context.is_edit_ok()"
+          tal:omit-tag="python:1" i18n:translate="">Issue
+          <tal:x replace="context/id" i18n:name="id" /> Editing</span>
+  </tal:block>
 
 <div metal:fill-slot="content">
 
@@ -58,35 +60,6 @@
             </div>
           </div>
           
-          <div class='row-fluid'>
-            <!-- TYPE -->
-            <div class='control-group span6'>
-              <label class='control-label' for='issue_type'
-                    tal:condition="context/type/is_edit_ok" i18n:translate="">
-                <span tal:condition="context/type/is_edit_ok" 
-                      tal:replace="structure python:db.issue_type.classhelp('id,name,description',property='type',label='Type')" />
-              </label>
-              <label class='control-label' for='issue_type'
-                  tal:condition="not:context/type/is_edit_ok" i18n:translate="">Type</label>
-              <div class='controls' tal:content="structure context/type/menu">
-                <!-- ; -->
-              </div>
-            </div>
-            <!-- Severity -->
-            <div class='control-group span6'>
-              <label class='control-label' for='issue_severity'
-                    tal:condition="context/severity/is_edit_ok" i18n:translate="">
-                <span tal:condition="context/severity/is_edit_ok" 
-                    tal:replace="structure python:db.severity.classhelp('id,name,description',property='severity',label='Severity')" />
-              </label>
-              <label class='control-label' for='issue_severity'
-                  tal:condition="not:context/severity/is_edit_ok" i18n:translate="">Severity</label>
-              <div class='controls' tal:content="structure context/severity/menu">
-                <!-- ; -->
-              </div>
-            </div>
-          </div> <!-- row-fluid -->
-
           <div class='row-fluid'>
             <!-- Components -->
             <div class='control-group span6'>
