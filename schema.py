@@ -132,12 +132,12 @@ patch = FileClass(db, "patch",
                   repository=String(),
                   revision=String())
 
-# Bug Type
-bug_type = Class(db, 'bug_type',
+# Issue Type
+issue_type = Class(db, 'issue_type',
                  name=String(),
                  description=String(),
                  order=Number())
-bug_type.setkey('name')
+issue_type.setkey('name')
 
 # IssueClass automatically gets these properties in addition to the Class ones:
 #   title = String()
@@ -146,41 +146,19 @@ bug_type.setkey('name')
 #   patches = Multilink("patches")
 #   nosy = Multilink("user")
 #   superseder = Multilink("issue")
-bug = IssueClass(db, "bug",
-                 type=Link('bug_type'),
+issue = IssueClass(db, "issue",
+                 type=Link('issue_type'),
                  components=Multilink('component'),
                  versions=Multilink('version'),
                  severity=Link('severity'),
                  priority=Link('priority'),
-                 dependencies=Multilink('bug'),
+                 dependencies=Multilink('issue'),
                  assignee=Link('user'),
                  status=Link('status'),
                  resolution=Link('resolution'),
-                 superseder=Link('bug'),
+                 superseder=Link('issue'),
                  keywords=Multilink('keyword'))
 
-# Task Type
-task_type = Class(db, 'task_type',
-                 name=String(),
-                 description=String(),
-                 order=Number())
-task_type.setkey('name')
-
-# IssueClass automatically gets these properties in addition to the Class ones:
-#   title = String()
-#   messages = Multilink("msg")
-#   files = Multilink("file")
-#   nosy = Multilink("user")
-#   superseder = Multilink("issue")
-task = IssueClass(db, "task",
-                  type=Link('task_type'),
-                  components=Multilink('component'),
-                  priority=Link('priority'),
-                  dependencies=Multilink('task'),
-                  assignee=Multilink('user'),
-                  status=Link('status'),
-                  resolution=Link('resolution'),
-                  solves=Link('bug'))
 
 #
 # TRACKER SECURITY SETTINGS
@@ -205,14 +183,14 @@ for r in 'User', 'Developer', 'Coordinator':
 
 for cl in ('severity', 'component',
            'version', 'priority', 'status', 'resolution',
-           'bug_type', 'bug', 'task_type', 'task', 
+           'issue_type', 'issue', 
            'keyword', 'file', 'msg'):
     db.security.addPermissionToRole('User', 'View', cl)
     db.security.addPermissionToRole('Anonymous', 'View', cl)
 
 for cl in ('severity', 'component',
            'version', 'priority', 'status', 'resolution',
-           'bug_type', 'bug', 'file', 'msg'):
+           'issue_type', 'issue', 'file', 'msg'):
     db.security.addPermissionToRole('User', 'Create', cl)
     
 
@@ -223,47 +201,33 @@ p = db.security.addPermission(name='Edit', klass='file', check=may_edit_file,
     description="User is allowed to remove their own files")
 db.security.addPermissionToRole('User', p)
 
-p = db.security.addPermission(name='Create', klass='bug',
-                              properties=('title', 'bug_type',
+p = db.security.addPermission(name='Create', klass='issue',
+                              properties=('title', 'issue_type',
                                           'components', 'versions',
                                           'severity',
                                           'messages', 'files', 'nosy'),
-                              description='User can report and discuss bugs')
+                              description='User can report and discuss issues')
 db.security.addPermissionToRole('User', p)
 
-p = db.security.addPermission(name='Edit', klass='bug',
-                              properties=('title', 'bug_type',
+p = db.security.addPermission(name='Edit', klass='issue',
+                              properties=('title', 'issue_type',
                                           'components', 'versions',
                                           'severity',
                                           'messages', 'files', 'nosy'),
-                              description='User can report and discuss bugs')
+                              description='User can report and discuss issues')
 db.security.addPermissionToRole('User', p)
-
-p = db.security.addPermission(name='Create', klass='task',
-                              properties=('title', 'task_type',
-                                          'components',
-                                          'messages', 'files', 'nosy'),
-                              description='Developer can create and discuss tasks')
-db.security.addPermissionToRole('Developer', p)
-
-p = db.security.addPermission(name='Edit', klass='task',
-                              properties=('title', 'task_type',
-                                          'components',
-                                          'messages', 'files', 'nosy'),
-                              description='Developer can create and discuss tasks')
-db.security.addPermissionToRole('Developer', p)
 
 
 
 ##########################
 # Developer permissions
 ##########################
-for cl in ('bug_type', 'severity', 'component',
+for cl in ('issue_type', 'severity', 'component',
            'version', 'priority', 'status', 'resolution',
-           'bug', 'file', 'msg', 'keyword'):
+           'issue', 'file', 'msg', 'keyword'):
     db.security.addPermissionToRole('Developer', 'View', cl)
 
-for cl in ('bug', 'file', 'msg', 'keyword'):
+for cl in ('issue', 'file', 'msg', 'keyword'):
     db.security.addPermissionToRole('Developer', 'Edit', cl)
     db.security.addPermissionToRole('Developer', 'Create', cl)
 
@@ -271,8 +235,8 @@ for cl in ('bug', 'file', 'msg', 'keyword'):
 ##########################
 # Coordinator permissions
 ##########################
-for cl in ('bug_type', 'task_type', 'severity', 'component',
-           'version', 'priority', 'status', 'resolution', 'bug', 'task', 'file', 'msg'):
+for cl in ('issue_type', 'severity', 'component',
+           'version', 'priority', 'status', 'resolution', 'issue', 'file', 'msg'):
     db.security.addPermissionToRole('Coordinator', 'View', cl)
     db.security.addPermissionToRole('Coordinator', 'Edit', cl)
     db.security.addPermissionToRole('Coordinator', 'Create', cl)
@@ -355,7 +319,7 @@ db.security.addPermissionToRole('Anonymous', 'Create', 'user')
 # Allow anonymous users access to view issues (and the related, linked
 # information).
 
-for cl in 'bug', 'severity', 'status', 'resolution', 'msg', 'file':
+for cl in 'issue', 'severity', 'status', 'resolution', 'msg', 'file':
     db.security.addPermissionToRole('Anonymous', 'View', cl)
 
 # [OPTIONAL]

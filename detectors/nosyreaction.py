@@ -116,14 +116,9 @@ def updatenosy(db, cl, nodeid, newvalues):
         newvalues['nosy'] = list(new_nosy)
 
 def init(db):
-    db.bug.react('create', nosyreaction)
-    db.bug.react('set', nosyreaction)
-    db.bug.audit('create', updatenosy)
-    db.bug.audit('set', updatenosy)
-
-    db.task.react('create', nosyreaction)
-    db.task.react('set', nosyreaction)
-    db.task.audit('create', updatenosy)
-    db.task.audit('set', updatenosy)
+    db.issue.react('create', nosyreaction)
+    db.issue.react('set', nosyreaction)
+    db.issue.audit('create', updatenosy)
+    db.issue.audit('set', updatenosy)
 
 #SHA: 77f5bc49455c549affcb9dcabfa49e4f6ac9a92f

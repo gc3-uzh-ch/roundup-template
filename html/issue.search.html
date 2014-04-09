@@ -1,8 +1,8 @@
 <tal:block metal:use-macro="templates/page/macros/frame">
-<title metal:fill-slot="head_title" i18n:translate="">Task searching - <span
+<title metal:fill-slot="head_title" i18n:translate="">Issue searching - <span
  i18n:name="tracker" tal:replace="config/TRACKER_NAME" /></title>
 <span metal:fill-slot="body_title" tal:omit-tag="python:1"
- i18n:translate="">Task searching</span>
+ i18n:translate="">Issue searching</span>
 <td class="content" metal:fill-slot="content">
 
 <form method="get" name="itemSynopsis"
@@ -110,7 +110,7 @@
 </tr>
 
 <tr tal:define="name string:type;
-                db_klass string:task_type;
+                db_klass string:issue_type;
                 db_content string:name;">
   <th i18n:translate="">Type:</th>
   <td metal:use-macro="search_select_translated">
@@ -135,8 +135,34 @@
   <td metal:use-macro="group_input"></td>
 </tr>
 
+<tr tal:define="name string:versions;
+                db_klass string:version;
+                db_content string:name;">
+  <th i18n:translate="">Versions:</th>
+  <td metal:use-macro="search_select_translated">
+    <option metal:fill-slot="extra_options" value="-1" i18n:translate=""
+            tal:attributes="selected python:value == '-1'">not selected</option>
+  </td>
+  <td metal:use-macro="column_input"></td>
+  <td metal:use-macro="sort_input"></td>
+  <td metal:use-macro="group_input"></td>
+</tr>
+
+<!--tr tal:define="name string:severity;
+                db_klass string:severity;
+                db_content string:name;">
+  <th i18n:translate="">Severity:</th>
+  <td metal:use-macro="search_select_translated">
+    <option metal:fill-slot="extra_options" value="-1" i18n:translate=""
+            tal:attributes="selected python:value == '-1'">not selected</option>
+  </td>
+  <td metal:use-macro="column_input"></td>
+  <td metal:use-macro="sort_input"></td>
+  <td metal:use-macro="group_input"></td>
+</tr-->
+
 <tr tal:define="name string:dependencies;
-                db_klass string:task;
+                db_klass string:issue;
                 db_content string:id;">
   <th i18n:translate="">Depends on:</th>
   <td metal:use-macro="search_input"/>
@@ -156,6 +182,19 @@
       <option value="-1" tal:attributes="selected python:value == '-1'"
        i18n:translate="">unassigned</option>
     </tal:block>
+  </td>
+  <td metal:use-macro="column_input"></td>
+  <td metal:use-macro="sort_input"></td>
+  <td metal:use-macro="group_input"></td>
+</tr>
+
+<tr tal:define="name string:keyword;
+                db_klass string:keyword;
+                db_content string:name;">
+  <th i18n:translate="">Keyword:</th>
+  <td metal:use-macro="search_select_keywords">
+    <option metal:fill-slot="extra_options" value="-1" i18n:translate=""
+            tal:attributes="selected python:value == '-1'">not set</option>
   </td>
   <td metal:use-macro="column_input"></td>
   <td metal:use-macro="sort_input"></td>
@@ -255,7 +294,7 @@
 <tr><td>&nbsp;</td>
  <td colspan="4" class="help">
   <span i18n:translate="" tal:omit-tag="true">
-   *: The "all text" field will look in message bodies and task titles
+   *: The "all text" field will look in message bodies and issue titles
   </span><br>
   <span tal:condition="python:request.user.hasPermission('Edit', 'query')"
    i18n:translate="" tal:omit-tag="true"
@@ -271,4 +310,4 @@
 </td>
 
 </tal:block>
-<!-- SHA: b2c26ed13b31c8d55f8ee8ecb827782adf092cc6 -->
+<!-- SHA: ad5e54ad0f1dfdede5d1ccef1b5a7e87a24ad6e4 -->

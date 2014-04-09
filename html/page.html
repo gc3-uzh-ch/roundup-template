@@ -21,29 +21,25 @@
   </head>
   <body tal:attributes="class request/classname"
        tal:define="kw_create python:request.user.hasPermission('Create', 'keyword');
-                   bug_columns string:id,activity,title,creator,status;
-                   bug_columns_showall string:id,activity,title,creator,assignee,status;
-                   bug_status_notclosed string:-1,1,2,4;
-
-                   task_columns string:id,activity,title,creator,status;
-                   task_columns_showall string:id,activity,title,creator,assignee,status;
-                   task_status_notclosed string:-1,1,2,4;
+                   issue_columns string:id,activity,title,creator,status;
+                   issue_columns_showall string:id,activity,title,creator,assignee,status;
+                   issue_status_notclosed string:-1,1,2,4;
                    ">
   <div class="navbar navbar-fixed-top">
     <div class='navbar-inner'>
       <div class='container'>
        <a href="/" class='brand'><i class='icon-home'></i> Roundup Demo Tracker</a>
        <div id="searchbox" class='pull-right'>
-        <form name="searchform" method="get" action="bug" id="searchform" class='form-search'>
+        <form name="searchform" method="get" action="issue" id="searchform" class='form-search'>
          <div id="search">
           <input type="hidden" name="@columns"
-                 tal:attributes="value bug_columns_showall"/>
+                 tal:attributes="value issue_columns_showall"/>
           <input type="hidden" name="@sort" value="-activity" />
           <input type="hidden" name="@group" value="priority" />
           <input type="hidden" name="@filter" value="status"/>
-          <input type="hidden" name="status" tal:attributes="value bug_status_notclosed"/>
+          <input type="hidden" name="status" tal:attributes="value issue_status_notclosed"/>
           <input class="input-text input-medium search-query" id="search-text" name="@search_text" size="10" />
-          <input type="submit" id="submit" value="search in open bugs" name="submit" class="btn"/>
+          <input type="submit" id="submit" value="search in open issues" name="submit" class="btn"/>
          </div>
         </form>
        </div> <!-- searchbox -->
@@ -53,95 +49,49 @@
   <div class='container-fluid'>
     <div class='row-fluid'>
       <div class="span3 well">
-        <ul tal:condition="python:request.user.hasPermission('View', 'bug')" class='nav nav-list'>
-          <li class='nav-header'><i class='icon-fire'></i>Bugs</li>
-          <li><a href="bug" i18n:translate="">Bugs</a>
+        <ul tal:condition="python:request.user.hasPermission('View', 'issue')" class='nav nav-list'>
+          <li class='nav-header'><i class='icon-fire'></i>Issues</li>
+          <li><a href="issue" i18n:translate="">Issues</a>
           </li>
-          <li tal:condition="python:request.user.hasPermission('Create', 'bug')">
-            <a href="bug?@template=item" i18n:translate="">Create New</a>
+          <li tal:condition="python:request.user.hasPermission('Create', 'issue')">
+            <a href="issue?@template=item" i18n:translate="">Create New</a>
           </li>
           <li>
             <a href="#"
-                tal:attributes="href python:request.indexargs_url('bug', {
+                tal:attributes="href python:request.indexargs_url('issue', {
                                     '@sort': '-activity',
                                     '@group': 'priority',
                                     '@filter': 'status',
-                                    '@columns': bug_columns_showall,
+                                    '@columns': issue_columns_showall,
                                     '@search_text': '',
-                                    'status': bug_status_notclosed,
+                                    'status': issue_status_notclosed,
                                     '@dispname': i18n.gettext('Show All'),
                                     '@startwith': 0,
                                     })"
-                    i18n:translate="">Show Open</a>
+                    i18n:translate="">Open issues</a>
           </li>
           <li><a href="#"
-                  tal:attributes="href python:request.indexargs_url('bug', {
+                  tal:attributes="href python:request.indexargs_url('issue', {
                                     '@sort': '-activity',
                                     '@group': 'priority',
                                     '@filter': 'status,assignee',
-                                    '@columns': bug_columns,
+                                    '@columns': issue_columns,
                                     '@search_text': '',
-                                    'status': bug_status_notclosed,
+                                    'status': issue_status_notclosed,
                                     'assignee': '-1',
                                     '@dispname': i18n.gettext('Show Unassigned'),
                                     '@startwith': 0,
                                     })"
-                    i18n:translate="">Show Unassigned</a>
+                    i18n:translate="">Unassigned issues</a>
           </li>
           <li>
-            <a href="bug?@template=search&status=1" i18n:translate="">Search</a>
-          </li>
-          <li>
-            <form method="post" action="#" class='form-inline'>
-              <input class="input-small" type="text" name="@number"/>
-              <input type="submit" class="btn" value="Show bug" i18n:attributes="value"/>
-              <input type="hidden" name="@type" value="bug"/>
-              <input type="hidden" name="@action" value="show"/>
-            </form>
-          </li>
-        </ul>
-        <hr>
-        <ul tal:condition="python:request.user.hasPermission('View', 'task')" class='nav nav-list'>
-          <li class="nav-header"><i class='icon-briefcase'></i>Tasks</li>
-          <li><a href="task" i18n:translate="">Tasks</a></li>
-          <li tal:condition="python:request.user.hasPermission('Create', 'task')">
-            <a href="task?@template=item" i18n:translate="">Create New</a>
-          </li>
-          <li>
-            <a href="#" tal:attributes="href python:request.indexargs_url('task', {
-                                  '@sort': '-activity',
-                                  '@group': 'priority',
-                                  '@filter': 'status',
-                                  '@columns': task_columns_showall,
-                                  '@search_text': '',
-                                  'status': task_status_notclosed,
-                                  '@dispname': i18n.gettext('Show All'),
-                                  '@startwith': 0,
-                                  })"
-                  i18n:translate="">Show Open</a>
-          </li>
-          <li>
-            <a href="#" tal:attributes="href python:request.indexargs_url('task', {
-                                  '@sort': '-activity',
-                                  '@group': 'priority',
-                                  '@filter': 'status,assignee',
-                                  '@columns': task_columns,
-                                  '@search_text': '',
-                                  'status': task_status_notclosed,
-                                  'assignee': '-1',
-                                  '@dispname': i18n.gettext('Show Unassigned'),
-                                  '@startwith': 0,
-                                  })"
-                  i18n:translate="">Show Unassigned</a>
-          </li>
-          <li>
-            <a href="task?@template=search&status=1" i18n:translate="">Search</a>
+            <a href="issue?@template=search&status=1" i18n:translate="">Search</a>
           </li>
           <li>
             <form method="post" action="#" class='form-inline'>
               <input class="input-small" type="text" name="@number"/>
-              <input type="submit" class="btn" value="Show task" i18n:attributes="value"/>
-              <input type="hidden" name="@type" value="task"/>
+              <input type="submit" class="btn" value="Show issue" i18n:attributes="value"/>
+              <input type="hidden" name="@type" value="issue"/>
               <input type="hidden" name="@action" value="show"/>
             </form>
           </li>
@@ -179,17 +129,17 @@
           <ul class='nav nav-list'>
             <li class="nav-header"><i class='icon-user'></i><b tal:replace="request/user/username">username</b></li>
             <li>
-              <a href="#" tal:attributes="href python:request.indexargs_url('bug', {
+              <a href="#" tal:attributes="href python:request.indexargs_url('issue', {
                                          '@sort': '-activity',
                                          '@group': 'priority',
                                          '@filter': 'status,assignee',
-                                         '@columns': bug_columns,
+                                         '@columns': issue_columns,
                                          '@search_text': '',
-                                         'status': bug_status_notclosed,
+                                         'status': issue_status_notclosed,
                                          'assignee': request.user.id,
-                                         '@dispname': i18n.gettext('Bugs assigned to you'),
+                                         '@dispname': i18n.gettext('Issues assigned to you'),
                                          '@startwith': 0})"
-                        i18n:translate="">Bugs assigned to you</a>
+                        i18n:translate="">Issues assigned to you</a>
             </li>
             <li>
               <a tal:attributes="href string:user${request/user/id}" i18n:translate="">Your Details</a>
@@ -274,25 +224,6 @@ See issue.search.html in the classic template for examples.
                          id name"/>
 </td>
 
-<td metal:define-macro="search_date">
-  <input tal:attributes="value python:request.form.getvalue(name) or nothing;
-                         name name;
-                         id name"/>
-  <a class="classhelp"
-	 tal:attributes="href python:'''javascript:help_window('task?@template=calendar&property=%s&form=itemSynopsis', 300, 200)'''%name">(cal)</a>
-</td>
-
-<td metal:define-macro="search_popup">
-  <!--
-    context needs to specify the popup "columns" as a comma-separated
-    string (eg. "id,title" or "id,name,description") as well as name
-  -->
-  <input tal:attributes="value python:request.form.getvalue(name) or nothing;
-                         name name;
-                         id name"/>
-  <span tal:replace="structure python:db.task.classhelp(columns,
-                                      property=name)" />
-</td>
 
 <td metal:define-macro="search_select">
   <select tal:attributes="name name; id name"
