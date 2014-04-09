@@ -37,10 +37,6 @@
   <th i18n:translate="">Repository</th>
   <td tal:content="structure context/repository/field"></td>
  </tr>
- <tr>
-  <th i18n:translate="">Repository revision</th>
-  <td tal:content="structure context/revision/field"></td>
- </tr>
  <tr tal:condition="python:context.is_edit_ok()">
   <td>
    &nbsp;
@@ -122,10 +118,6 @@
  <tr>
   <th i18n:translate="">Repository</th>
   <td tal:content="structure context/repository/field"></td>
- </tr>
- <tr>
-  <th i18n:translate="">Repository revision</th>
-  <td tal:content="structure context/revision/field"></td>
  </tr>
  <tr tal:condition="python:context.is_edit_ok()">
   <td>

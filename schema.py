@@ -10,22 +10,6 @@
 #   actor = Link('user')
 
 
-# This is the repository class, then you can see/edit repositories in pages like
-# "http://tracker/url/vcs_repo1"
-vcs_repo = Class(db, "vcs_repo",
-name=String(),
-host=String(),
-path=String(),
-webview_url=String())
-vcs_repo.setkey('name')
-
-# Stores revision data, lets you see/edit revisions in pages like
-# "http://tracker/url/vcs_rev1". The vcs_rev.item.html template is currently
-# broken, but this works fine without it.
-vcs_rev = Class(db, "vcs_rev",
-repository=Link('vcs_repo'),
-revision=String())
-
 
 
 # Component
@@ -36,12 +20,6 @@ component = Class(db, 'component',
                   assign_to=Link('user'))
 component.setkey('name')
 
-# Version
-version = Class(db, 'version',
-                name=String(),
-                description=String(),
-                order=Number())
-version.setkey('name')
 
 # Severity
 severity = Class(db, 'severity',
@@ -97,15 +75,10 @@ user = Class(db, "user",
              alternate_addresses=String(),
              queries=Multilink('query'),
              roles=String(),     # comma-separated string of Role names
-             timezone=String(),
-             vcs_name=String())
+             timezone=String(),)
 
 user.setkey("username")
 
-# Permissions for revision creation and repository viewing.
-for role in ('User',):
-    db.security.addPermissionToRole(role, 'Create', 'vcs_rev')
-    db.security.addPermissionToRole(role, 'View', 'vcs_repo')
 
 # FileClass automatically gets this property in addition to the Class ones:
 #   content = String()    [saved to disk in <tracker home>/db/files/]
@@ -117,20 +90,12 @@ msg = FileClass(db, "msg",
                 summary=String(),
                 files=Multilink("file"),
                 messageid=String(),
-                inreplyto=String(),
-                revision=Link("vcs_rev"))
+                inreplyto=String())
 
 # File
 file = FileClass(db, "file",
                 name=String(),
                 description=String(indexme='yes'))
-
-# Patch
-patch = FileClass(db, "patch",
-                  name=String(),
-                  description=String(indexme='yes'),
-                  repository=String(),
-                  revision=String())
 
 # Issue Type
 issue_type = Class(db, 'issue_type',
@@ -143,13 +108,11 @@ issue_type.setkey('name')
 #   title = String()
 #   messages = Multilink("msg")
 #   files = Multilink("file")
-#   patches = Multilink("patches")
 #   nosy = Multilink("user")
 #   superseder = Multilink("issue")
 issue = IssueClass(db, "issue",
                  type=Link('issue_type'),
                  components=Multilink('component'),
-                 versions=Multilink('version'),
                  severity=Link('severity'),
                  priority=Link('priority'),
                  dependencies=Multilink('issue'),
@@ -181,28 +144,30 @@ for r in 'User', 'Operator':
 ##########################
 
 for cl in ('severity', 'component',
-           'version', 'priority', 'status', 'resolution',
+           'priority', 'status', 'resolution',
            'issue_type', 'issue', 
            'keyword', 'file', 'msg'):
     db.security.addPermissionToRole('User', 'View', cl)
     db.security.addPermissionToRole('Anonymous', 'View', cl)
 
 for cl in ('severity', 'component',
-           'version', 'priority', 'status', 'resolution',
+           'priority', 'status', 'resolution',
            'issue_type', 'issue', 'file', 'msg'):
     db.security.addPermissionToRole('User', 'Create', cl)
     
 
-def may_edit_file(db, userid, itemid):
-    return userid == db.file.get(itemid, "creator")
+def checker(klass):
+    def check(db, userid, itemid, klass=klass):
+        return db.getclass(klass).get(itemid, 'creator') == userid
+    return check
 
-p = db.security.addPermission(name='Edit', klass='file', check=may_edit_file,
+p = db.security.addPermission(name='Edit', klass='file', check=checker('file'),
     description="User is allowed to remove their own files")
 db.security.addPermissionToRole('User', p)
 
 p = db.security.addPermission(name='Create', klass='issue',
                               properties=('title', 'issue_type',
-                                          'components', 'versions',
+                                          'components',
                                           'severity',
                                           'messages', 'files', 'nosy'),
                               description='User can report and discuss issues')
@@ -210,18 +175,24 @@ db.security.addPermissionToRole('User', p)
 
 p = db.security.addPermission(name='Edit', klass='issue',
                               properties=('title', 'issue_type',
-                                          'components', 'versions',
+                                          'components',
                                           'severity',
                                           'messages', 'files', 'nosy'),
-                              description='User can report and discuss issues')
+                              description='User can report and discuss issues',
+                              check=checker('issue'))
 db.security.addPermissionToRole('User', p)
 
+# but can add comments to other people's issue
+p = db.security.addPermission(name='Edit', klass='issue',
+                              properties=('messages', 'files', 'nosy'),
+                              description='User can report and discuss issues')
+db.security.addPermissionToRole('User', p)
 
 ##########################
 # Operator permissions
 ##########################
 for cl in ('issue_type', 'severity', 'component',
-           'version', 'priority', 'status', 'resolution', 'issue', 'file', 'msg'):
+           'priority', 'status', 'resolution', 'issue', 'file', 'msg'):
     db.security.addPermissionToRole('Operator', 'View', cl)
     db.security.addPermissionToRole('Operator', 'Edit', cl)
     db.security.addPermissionToRole('Operator', 'Create', cl)

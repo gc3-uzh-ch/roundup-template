@@ -18,14 +18,6 @@ component.create(name="frontend", order="2")
 component.create(name="documentation", order="3")
 component.create(name="specification", order="4")
 
-version = db.getclass('version')
-version.create(name='devel', order='1')
-version.create(name='1.0', order='2')
-version.create(name='1.1', order='3')
-version.create(name='1.2', order='4')
-version.create(name='1.3', order='5')
-version.create(name='1.4', order='6')
-
 
 severity = db.getclass('severity')
 severity.create(name='critical', order='1')

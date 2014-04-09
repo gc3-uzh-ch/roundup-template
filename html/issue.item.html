@@ -47,8 +47,6 @@
             <dd tal:content="structure context/type/plain"></dd>
             <dt i18n:translate="">Components</dt>
             <dd tal:content="structure context/components/plain"></dd>
-            <dt i18n:translate="">Version</dt>
-            <dd tal:content="structure context/versions/plain"></dd>
           </dl>
         </div>
         <div class='container-fluid' tal:condition="context/is_edit_ok">
@@ -100,19 +98,6 @@
               <label class='control-label' for='issue_components'
                   tal:condition="not:context/components/is_edit_ok" i18n:translate="">component</label>
               <div class='controls' tal:content="structure context/components/menu">
-                <!-- ; -->
-              </div>
-            </div>
-            <!-- Versions -->
-            <div class='control-group span6'>
-              <label class='control-label' for='issue_versions'
-                    tal:condition="context/versions/is_edit_ok" i18n:translate="">
-                <span tal:condition="context/versions/is_edit_ok" 
-                    tal:replace="structure python:db.version.classhelp('id,name,description',property='versions',label='Versions')" />
-              </label>
-              <label class='control-label' for='issue_versions'
-                  tal:condition="not:context/versions/is_edit_ok" i18n:translate="">Versions</label>
-              <div class='controls' tal:content="structure context/versions/menu">
                 <!-- ; -->
               </div>
             </div>
