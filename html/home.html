@@ -7,5 +7,14 @@
 <span tal:replace="structure python:db.issue.renderWith('index',
     sort=[('-', 'activity')], filter=['status'],
     columns=['activity','title','creator'],
-    filterspec={'status':['1','2','4']})" />
+    filterspec={'status':['-1', '1', '2', '4', '5']})"
+      tal:condition="python: request.user.hasRole('Operator')" />
+
+<span tal:replace="structure python:db.issue.renderWith('index',
+    sort=[('-', 'activity')], filter=['status', 'creator'],
+    columns=['activity','title','creator'],
+    filterspec={'status':['-1', '1', '2', '4', '5'],
+                'creator': request.user.id})"
+      tal:condition="python: not request.user.hasRole('Operator')" />
+
 <!-- SHA: a1ef18409982c5d13507a8d9cfe4edc4a200e017 -->
