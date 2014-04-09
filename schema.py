@@ -12,13 +12,13 @@
 
 
 
-# Component
-component = Class(db, 'component',
+# Topic
+topic = Class(db, 'topic',
                   name=String(),
                   description=String(),
                   order=Number(),
                   assign_to=Link('user'))
-component.setkey('name')
+topic.setkey('name')
 
 
 
@@ -35,13 +35,6 @@ status = Class(db, "status",
                description=String(),
                order=Number())
 status.setkey("name")
-
-# Resolution
-resolution = Class(db, "resolution",
-                   name=String(),
-                   description=String(),
-                   order=Number())
-resolution.setkey('name')
 
 # Keyword
 keyword = Class(db, "keyword",
@@ -99,12 +92,11 @@ file = FileClass(db, "file",
 #   nosy = Multilink("user")
 #   superseder = Multilink("issue")
 issue = IssueClass(db, "issue",
-                 components=Multilink('component'),
+                 topics=Multilink('topic'),
                  priority=Link('priority'),
                  dependencies=Multilink('issue'),
                  assignee=Link('user'),
                  status=Link('status'),
-                 resolution=Link('resolution'),
                  superseder=Link('issue'),
                  keywords=Multilink('keyword'))
 
@@ -129,13 +121,13 @@ for r in 'User', 'Operator':
 # User permissions
 ##########################
 
-for cl in ('component',
-           'priority', 'status', 'resolution', 'issue', 
+for cl in ('topic',
+           'priority', 'status', 'issue', 
            'keyword', 'file', 'msg'):
     db.security.addPermissionToRole('User', 'View', cl)
 
-for cl in ('component',
-           'priority', 'status', 'resolution',
+for cl in ('topic',
+           'priority', 'status',
            'issue', 'file', 'msg'):
     db.security.addPermissionToRole('User', 'Create', cl)
     
@@ -151,13 +143,13 @@ db.security.addPermissionToRole('User', p)
 
 p = db.security.addPermission(name='Create', klass='issue',
                               properties=('title',
-                                          'components',
+                                          'topics',
                                           'messages', 'files', 'nosy'),
                               description='User can report and discuss issues')
 db.security.addPermissionToRole('User', p)
 
 p = db.security.addPermission(name='Edit', klass='issue',
-                              properties=('title', 'components',
+                              properties=('title', 'topics', 'status',
                                           'messages', 'files', 'nosy'),
                               description='User can report and discuss issues',
                               check=checker('issue'))
@@ -172,8 +164,7 @@ db.security.addPermissionToRole('User', p)
 ##########################
 # Operator permissions
 ##########################
-for cl in ('component',
-           'priority', 'status', 'resolution', 'issue', 'file', 'msg'):
+for cl in ('topic', 'priority', 'status', 'issue', 'file', 'msg'):
     db.security.addPermissionToRole('Operator', 'View', cl)
     db.security.addPermissionToRole('Operator', 'Edit', cl)
     db.security.addPermissionToRole('Operator', 'Create', cl)

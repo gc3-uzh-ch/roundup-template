@@ -8,6 +8,8 @@
     <tal:block condition="not:context/id" i18n:translate="">New Issue
       - <span tal:replace="config/TRACKER_NAME" i18n:name="tracker"/>
     </tal:block>
+    <tal:block define="is_operator
+    python:request.user.hasRole('Operator')" />
   </title>
   <tal:block metal:fill-slot="body_title">
     <span tal:condition="python: not (context.id or
@@ -47,8 +49,8 @@
             <dd tal:content="structure context/title/plain"></dd>
             <dt i18n:translate="">Type</dt>
             <dd tal:content="structure context/type/plain"></dd>
-            <dt i18n:translate="">Components</dt>
-            <dd tal:content="structure context/components/plain"></dd>
+            <dt i18n:translate="">Topics</dt>
+            <dd tal:content="structure context/topics/plain"></dd>
           </dl>
         </div>
         <div class='container-fluid' tal:condition="context/is_edit_ok">
@@ -59,34 +61,56 @@
               <input class='input-xxlarge' type='text' name='title' id='issue_title' tal:attributes="value context/title">
             </div>
           </div>
-          
+
+          <!-- and finally, allow people to say something important -->
           <div class='row-fluid'>
-            <!-- Components -->
-            <div class='control-group span6'>
-              <label class='control-label' for='issue_components'
-                    tal:condition="context/components/is_edit_ok" i18n:translate="">
-                <span tal:condition="context/components/is_edit_ok" 
-                    tal:replace="structure python:db.component.classhelp('id,name,description',property='components',label='Components')" />
+            <div class='control-group'>
+              <label class='control-label'>
+                <tal:block i18n:translate="">
+                  <span class='badge badge-inverse'>Comment</span>
+                  &nbsp;
+                </tal:block>
               </label>
-              <label class='control-label' for='issue_components'
-                  tal:condition="not:context/components/is_edit_ok" i18n:translate="">component</label>
-              <div class='controls' tal:content="structure context/components/menu">
-                <!-- ; -->
+              <textarea tal:content="request/form/@note/value | default"
+                      name="@note" rows="6" class='input-xxlarge'></textarea>
+            </div>
+          </div> <!-- row-fluid -->
+
+          <!-- upload file -->
+          <div class='row-fluid'>
+            <div class='control-group'>
+              <label class='control-label'>
+                <tal:block i18n:translate="">File</tal:block>
+              </label>
+              <div class='controls'>
+                <input type="hidden" name="@link@files" value="file-1">
+                <input type="file" name="file-1@content" class='input-xlarge'>
               </div>
             </div>
           </div> <!-- row-fluid -->
+
+          <!-- file description -->
+          <div class='row-fluid'>
+            <div class='control-group'>
+              <label class='control-label'>
+                <tal:block i18n:translate="">File Description</tal:block>
+              </label>
+              <div class='controls'>
+                <input type="edit" name="file-1@description">
+              </div>
+            </div>
+          </div> <!-- row-fluid -->
+          
         </div> <!-- container-fluid -->
       </fieldset>
 
       <fieldset>
-        <legend>process</legend>
+        <legend>Extra information</legend>
         <div class='container-fluid' tal:condition="not:context/is_edit_ok">
           <div class='row-fluid'>
             <dl class='dl-horizontal span6'>
               <dt i18n:translate="">Status</dt>
               <dd tal:content="structure context/status/plain"></dd>
-              <dt i18n:translate="">Resolution</dt>
-              <dd tal:content="structure context/resolution/plain"></dd>
               <dt i18n:translate="">Dependencies</dt>
               <dd tal:content="structure context/dependencies/plain"></dd>
               <dt i18n:translate="">Superseder</dt>
@@ -120,16 +144,16 @@
                 <!-- ; -->
               </div>
             </div>
-            <!-- Resolution -->
+            <!-- Priority -->
             <div class='control-group span6'>
-              <label class='control-label' for='process_resolution'
-                    tal:condition="context/resolution/is_edit_ok" i18n:translate="">
-                <span tal:condition="context/resolution/is_edit_ok" 
-                    tal:replace="structure python:db.resolution.classhelp('id,name,description',property='resolution', label='Resolution')" />
+              <label class='control-label' for='process_priority'
+                    tal:condition="context/priority/is_edit_ok" i18n:translate="">
+                <span tal:condition="context/priority/is_edit_ok" 
+                    tal:replace="structure python:db.priority.classhelp('id,name,description',property='priority',label='Priority')" />
               </label>
-              <label class='control-label' for='process_resolution'
-                  tal:condition="not:context/resolution/is_edit_ok" i18n:translate="">Resolution</label>
-              <div class='controls' tal:content="structure context/resolution/menu">
+              <label class='control-label' for='process_priority'
+                  tal:condition="not:context/priority/is_edit_ok" i18n:translate="">Priority</label>
+              <div class='controls' tal:content="structure context/priority/menu">
                 <!-- ; -->
               </div>
             </div>
@@ -189,16 +213,16 @@
           </div> <!-- row-fluid -->
 
           <div class='row-fluid'>
-            <!-- Priority -->
+            <!-- Topics -->
             <div class='control-group span6'>
-              <label class='control-label' for='process_priority'
-                    tal:condition="context/priority/is_edit_ok" i18n:translate="">
-                <span tal:condition="context/priority/is_edit_ok" 
-                    tal:replace="structure python:db.priority.classhelp('id,name,description',property='priority',label='Priority')" />
+              <label class='control-label' for='issue_topics'
+                    tal:condition="context/topics/is_edit_ok" i18n:translate="">
+                <span tal:condition="context/topics/is_edit_ok" 
+                    tal:replace="structure python:db.topic.classhelp('id,name,description',property='topics',label='Topics')" />
               </label>
-              <label class='control-label' for='process_priority'
-                  tal:condition="not:context/priority/is_edit_ok" i18n:translate="">Priority</label>
-              <div class='controls' tal:content="structure context/priority/menu">
+              <label class='control-label' for='issue_topics'
+                  tal:condition="not:context/topics/is_edit_ok" i18n:translate="">topic</label>
+              <div class='controls' tal:content="structure context/topics/menu">
                 <!-- ; -->
               </div>
             </div>
@@ -211,44 +235,6 @@
             </div>
           </div> <!-- row-fluid -->
 
-          <!-- and finally, allow people to say something important -->
-          <div class='row-fluid'>
-            <div class='control-group'>
-              <label class='control-label'>
-                <tal:block i18n:translate="">
-                  <span class='badge badge-inverse'>Comment</span>
-                  &nbsp;
-                </tal:block>
-              </label>
-              <textarea tal:content="request/form/@note/value | default"
-                      name="@note" rows="6" class='input-xxlarge'></textarea>
-            </div>
-          </div> <!-- row-fluid -->
-
-          <!-- upload file -->
-          <div class='row-fluid'>
-            <div class='control-group'>
-              <label class='control-label'>
-                <tal:block i18n:translate="">File</tal:block>
-              </label>
-              <div class='controls'>
-                <input type="hidden" name="@link@files" value="file-1">
-                <input type="file" name="file-1@content" class='input-xlarge'>
-              </div>
-            </div>
-          </div> <!-- row-fluid -->
-
-          <!-- file description -->
-          <div class='row-fluid'>
-            <div class='control-group'>
-              <label class='control-label'>
-                <tal:block i18n:translate="">File Description</tal:block>
-              </label>
-              <div class='controls'>
-                <input type="edit" name="file-1@description">
-              </div>
-            </div>
-          </div> <!-- row-fluid -->
         </div> <!-- container-fluid -->
       </fieldset>
 
