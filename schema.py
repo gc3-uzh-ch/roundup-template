@@ -148,7 +148,6 @@ for cl in ('severity', 'component',
            'issue_type', 'issue', 
            'keyword', 'file', 'msg'):
     db.security.addPermissionToRole('User', 'View', cl)
-    db.security.addPermissionToRole('Anonymous', 'View', cl)
 
 for cl in ('severity', 'component',
            'priority', 'status', 'resolution',
@@ -268,13 +267,13 @@ db.security.addPermissionToRole('Anonymous', 'Web Access')
 # Assign the appropriate permissions to the anonymous user's Anonymous
 # Role. Choices here are:
 # - Allow anonymous users to register
-db.security.addPermissionToRole('Anonymous', 'Create', 'user')
+# db.security.addPermissionToRole('Anonymous', 'Create', 'user')
 
 # Allow anonymous users access to view issues (and the related, linked
 # information).
 
-for cl in 'issue', 'severity', 'status', 'resolution', 'msg', 'file':
-    db.security.addPermissionToRole('Anonymous', 'View', cl)
+# for cl in 'issue', 'severity', 'status', 'resolution', 'msg', 'file':
+#     db.security.addPermissionToRole('Anonymous', 'View', cl)
 
 # [OPTIONAL]
 # Allow anonymous users access to create or edit "issue" items (and the
