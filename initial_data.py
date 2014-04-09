@@ -68,8 +68,8 @@ keyword.create(name="patch", description="Contains patch")
 user = db.getclass('user')
 user.create(username="admin", password=adminpw, address=admin_email, roles='Admin')
 user.create(username="anonymous", roles='Anonymous')
-user.create(username="user", roles='User')
-user.create(username="developer", roles='User, Developer')
-user.create(username="coordinator", roles='User, Developer, Coordinator')
+user.create(username="user", roles='User', password=adminpw)
+user.create(username="operator", roles='User, Operator', password=adminpw)
+# user.create(username="coordinator", roles='User, Developer, Coordinator')
 
 #SHA: ee91ee3b5f8f356f7f3c8f26d21eba2fc9f4e17f

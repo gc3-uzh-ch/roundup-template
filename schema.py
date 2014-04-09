@@ -166,14 +166,13 @@ issue = IssueClass(db, "issue",
 # See the configuration and customisation document for information
 # about security setup.
 
-db.security.addRole(name='Developer', description='A developer')
-db.security.addRole(name='Coordinator', description='A coordinator')
+db.security.addRole(name='Operator', description='An Operator')
 
 #
 # REGULAR USERS
 #
 # Give the regular users access to the web and email interface
-for r in 'User', 'Developer', 'Coordinator':
+for r in 'User', 'Operator':
     db.security.addPermissionToRole(r, 'Web Access')
     db.security.addPermissionToRole(r, 'Email Access')
 
@@ -218,38 +217,23 @@ p = db.security.addPermission(name='Edit', klass='issue',
 db.security.addPermissionToRole('User', p)
 
 
-
 ##########################
-# Developer permissions
-##########################
-for cl in ('issue_type', 'severity', 'component',
-           'version', 'priority', 'status', 'resolution',
-           'issue', 'file', 'msg', 'keyword'):
-    db.security.addPermissionToRole('Developer', 'View', cl)
-
-for cl in ('issue', 'file', 'msg', 'keyword'):
-    db.security.addPermissionToRole('Developer', 'Edit', cl)
-    db.security.addPermissionToRole('Developer', 'Create', cl)
-
-
-##########################
-# Coordinator permissions
+# Operator permissions
 ##########################
 for cl in ('issue_type', 'severity', 'component',
            'version', 'priority', 'status', 'resolution', 'issue', 'file', 'msg'):
-    db.security.addPermissionToRole('Coordinator', 'View', cl)
-    db.security.addPermissionToRole('Coordinator', 'Edit', cl)
-    db.security.addPermissionToRole('Coordinator', 'Create', cl)
+    db.security.addPermissionToRole('Operator', 'View', cl)
+    db.security.addPermissionToRole('Operator', 'Edit', cl)
+    db.security.addPermissionToRole('Operator', 'Create', cl)
 
 # May users view other user information? Comment these lines out
 # if you don't want them to
-db.security.addPermissionToRole('User', 'View', 'user')
-db.security.addPermissionToRole('Developer', 'View', 'user')
-db.security.addPermissionToRole('Coordinator', 'View', 'user')
+# db.security.addPermissionToRole('User', 'View', 'user')
+db.security.addPermissionToRole('Operator', 'View', 'user')
 
-# Allow Coordinator to edit any user, including their roles.
-db.security.addPermissionToRole('Coordinator', 'Edit', 'user')
-db.security.addPermissionToRole('Coordinator', 'Web Roles')
+# Allow Operator to edit any user, including their roles.
+db.security.addPermissionToRole('Operator', 'Edit', 'user')
+db.security.addPermissionToRole('Operator', 'Web Roles')
 
 # Users should be able to edit their own details -- this permission is
 # limited to only the situation where the Viewed or Edited item is their own.
@@ -258,7 +242,7 @@ def own_record(db, userid, itemid):
     return userid == itemid
 p = db.security.addPermission(name='View', klass='user', check=own_record,
     description="User is allowed to view their own user details")
-for r in 'User', 'Developer', 'Coordinator':
+for r in 'User', 'Operator':
     db.security.addPermissionToRole(r, p)
 p = db.security.addPermission(name='Edit', klass='user', check=own_record,
     description="User is allowed to edit their own user details",
@@ -268,8 +252,7 @@ p = db.security.addPermission(name='Edit', klass='user', check=own_record,
                 'alternate_addresses',
                 'queries',
                 'timezone')) # Note: 'roles' excluded - users should not be able to edit their own roles. 
-for r in 'User', 'Developer':
-    db.security.addPermissionToRole(r, p)
+db.security.addPermissionToRole('User', p)
 
 # Users should be able to edit and view their own queries. They should also
 # be able to view any marked as not private. They should not be able to
@@ -284,15 +267,15 @@ p = db.security.addPermission(name='View', klass='query', check=view_query,
     description="User is allowed to view their own and public queries")
 p = db.security.addPermission(name='Search', klass='query')
 db.security.addPermissionToRole('User', p)
-for r in 'User', 'Developer', 'Coordinator':
+for r in 'User', 'Operator':
     db.security.addPermissionToRole(r, p)
 p = db.security.addPermission(name='Edit', klass='query', check=edit_query,
     description="User is allowed to edit their queries")
-for r in 'User', 'Developer', 'Coordinator':
+for r in 'User', 'Operator':
     db.security.addPermissionToRole(r, p)
 p = db.security.addPermission(name='Create', klass='query',
     description="User is allowed to create queries")
-for r in 'User', 'Developer', 'Coordinator':
+for r in 'User', 'Operator':
     db.security.addPermissionToRole(r, p)
 
 
