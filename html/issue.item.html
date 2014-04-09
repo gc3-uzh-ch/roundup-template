@@ -47,9 +47,12 @@
             <a tal:attributes="href string:msg${msg/id}"
               i18n:translate="">msg<tal:x replace="msg/id" i18n:name="id" /></a>
           </div>
-          <div class='span7 offset2'>
+          <div class='span7'>
             <span i18n:translate="">Author: <tal:x replace="python:msg.author.realname.plain()"
-              i18n:name="author" /> (<tal:x replace="msg/author"/>)</span>
+              i18n:name="author" />
+              (<tal:x replace="msg/author"/>)</span>
+          </div>
+            <div class='span3'>
             <span i18n:translate="">Date: <tal:x replace="python:msg.date.pretty('%Y-%m-%d %H:%M')"
               i18n:name="date" /></span>
           </div>
