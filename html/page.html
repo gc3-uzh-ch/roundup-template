@@ -52,7 +52,7 @@
       <div class="span3 well">
         <ul tal:condition="python:request.user.hasPermission('View', 'issue')" class='nav nav-list'>
           <li class='nav-header'><i class='icon-fire'></i>Issues</li>
-          <li><a href="issue" i18n:translate="">Issues</a>
+          <li><a href="issue" i18n:translate="" tal:condition="python:request.user.hasRole('Operator')">All Issues</a>
           </li>
           <li tal:condition="python:request.user.hasPermission('Create', 'issue')">
             <a href="issue?@template=item" i18n:translate="">Create New</a>
@@ -69,7 +69,22 @@
                                     '@dispname': i18n.gettext('Show All'),
                                     '@startwith': 0,
                                     })"
-                    i18n:translate="">Open issues</a>
+                    i18n:translate=""
+               tal:condition="python:request.user.hasRole('Operator')">Open issues</a>
+            <a href="#"
+                tal:attributes="href python:request.indexargs_url('issue', {
+                                    '@sort': '-activity',
+                                    '@group': 'priority',
+                                    '@filter': 'status,creator',
+                                    '@columns': issue_columns_showall,
+                                    '@search_text': '',
+                                    'status': issue_status_notclosed,
+                                    'creator': request.user.id,
+                                    '@dispname': i18n.gettext('Show All'),
+                                    '@startwith': 0,
+                                    })"
+                    i18n:translate=""
+               tal:condition="python: not request.user.hasRole('Operator')">My issues</a>
           </li>
           <li><a href="#"
                   tal:attributes="href python:request.indexargs_url('issue', {

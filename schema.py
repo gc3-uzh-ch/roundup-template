@@ -171,7 +171,7 @@ for cl in ('topic', 'priority', 'status', 'issue', 'file', 'msg'):
 
 # May users view other user information? Comment these lines out
 # if you don't want them to
-# db.security.addPermissionToRole('User', 'View', 'user')
+db.security.addPermissionToRole('User', 'View', 'user')
 db.security.addPermissionToRole('Operator', 'View', 'user')
 
 # Allow Operator to edit any user, including their roles.

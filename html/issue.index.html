@@ -20,7 +20,8 @@
  and request.user.hasRole('Anonymous')" i18n:translate="">
  Please login with your username and password.</p>
 
-<tal:block tal:define="batch request/batch" tal:condition="context/is_view_ok">
+<tal:block tal:define="batch request/batch"
+                       tal:condition="context/is_view_ok">
  <table class="table">
   <tr>
    <th tal:condition="request/show/id" i18n:translate="">ID</th>
