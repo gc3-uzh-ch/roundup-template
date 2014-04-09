@@ -53,14 +53,6 @@
             <span i18n:translate="">Date: <tal:x replace="python:msg.date.pretty('%Y-%m-%d %H:%M')"
               i18n:name="date" /></span>
           </div>
-          <div class='pull-right'>
-            <form style="padding:0" tal:condition="msg/is_edit_ok"
-                  tal:attributes="action string:issue${context/id}">
-             <input type="hidden" name="@remove@messages" tal:attributes="value msg/id">
-             <input type="hidden" name="@action" value="edit">
-             <input type="submit" value="remove" i18n:attributes="value">
-            </form>
-          </div>
         </div>
         <div class='row-fluid'>
           <div class="content">
@@ -321,7 +313,7 @@
         </td>
         <td>
           <form style="padding:0" tal:condition="file/is_edit_ok"
-             tal:attributes="action string:issue${context/id}">
+             tal:attributes="action string:issue${context/id}" method="POST">
               <input type="hidden" name="@remove@files" tal:attributes="value file/id">
               <input type="hidden" name="@action" value="edit">
               <input type="submit" value="remove" i18n:attributes="value">
