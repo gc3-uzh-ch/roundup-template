@@ -27,8 +27,8 @@ status.create(name='invalid', order='4')
 status.create(name='pending', description='user feedback required', order='5')
 status.create(name='wontfix', order='6')
 
-keyword = db.getclass("keyword")
-keyword.create(name="patch", description="Contains patch")
+# keyword = db.getclass("keyword")
+# keyword.create(name="patch", description="Contains patch")
 
 #
 # create the two default users

@@ -109,19 +109,6 @@
   <td>&nbsp;</td>
 </tr>
 
-<tr tal:define="name string:type;
-                db_klass string:issue_type;
-                db_content string:name;">
-  <th i18n:translate="">Type:</th>
-  <td metal:use-macro="search_select_translated">
-    <option metal:fill-slot="extra_options" value="-1" i18n:translate=""
-            tal:attributes="selected python:value == '-1'">not selected</option>
-  </td>
-  <td metal:use-macro="column_input"></td>
-  <td metal:use-macro="sort_input"></td>
-  <td metal:use-macro="group_input"></td>
-</tr>
-
 <tr tal:define="name string:topics;
                 db_klass string:topic;
                 db_content string:name;">
@@ -196,7 +183,7 @@
   <td metal:use-macro="search_select_translated">
     <tal:block metal:fill-slot="extra_options">
       <option value="-1,1,2" i18n:translate=""
-              tal:attributes="selected python:value == '-1,1,2'">not closed</option>
+              tal:attributes="selected python:value == '-1,1,2,5'">not closed</option>
       <option value="-1" i18n:translate=""
               tal:attributes="selected python:value == '-1'">not selected</option>
     </tal:block>
