@@ -8,8 +8,6 @@
     <tal:block condition="not:context/id" i18n:translate="">New Issue
       - <span tal:replace="config/TRACKER_NAME" i18n:name="tracker"/>
     </tal:block>
-    <tal:block define="is_operator
-    python:request.user.hasRole('Operator')" />
   </title>
   <tal:block metal:fill-slot="body_title">
     <span tal:condition="python: not (context.id or
@@ -26,7 +24,8 @@
           <tal:x replace="context/id" i18n:name="id" /> Editing</span>
   </tal:block>
 
-<div metal:fill-slot="content">
+<div metal:fill-slot="content"
+    tal:define="is_operator python:request.user.hasRole('Operator')" >
 
   <p tal:condition="python:not (context.is_view_ok()
    or request.user.hasRole('Anonymous'))" i18n:translate="" class='alert alert-error'>
@@ -37,12 +36,47 @@
    Please login with your username and password.</p>
 
   <div tal:condition="context/is_view_ok">
+    
+    <!-- messages -->
+    <h3>Issue <spal tal:content="context/id" />: <span tal:content="structure context/title/plain" /></h3>
+    <div class='container-fluid' tal:condition="context/messages">
+      <!-- <h3 i18n:translate="">Messages</h3> -->
+      <tal:block tal:repeat="msg context/messages">
+        <div class='row-fluid'>
+          <div class='span1'>
+            <a tal:attributes="href string:msg${msg/id}"
+              i18n:translate="">msg<tal:x replace="msg/id" i18n:name="id" /></a>
+          </div>
+          <div class='span7 offset2'>
+            <span i18n:translate="">Author: <tal:x replace="python:msg.author.realname.plain()"
+              i18n:name="author" /> (<tal:x replace="msg/author"/>)</span>
+            <span i18n:translate="">Date: <tal:x replace="python:msg.date.pretty('%Y-%m-%d %H:%M')"
+              i18n:name="date" /></span>
+          </div>
+          <div class='pull-right'>
+            <form style="padding:0" tal:condition="msg/is_edit_ok"
+                  tal:attributes="action string:issue${context/id}">
+             <input type="hidden" name="@remove@messages" tal:attributes="value msg/id">
+             <input type="hidden" name="@action" value="edit">
+             <input type="submit" value="remove" i18n:attributes="value">
+            </form>
+          </div>
+        </div>
+        <div class='row-fluid'>
+          <div class="content">
+            <pre tal:condition="python:msg.content.is_view_ok()"
+               tal:content="structure python:utils.localReplace(msg.content.hyperlinked())">content</pre>
+          </div>
+        </div>
+      </tal:block>
+    </div>
+    <!-- /messages -->
+
     <form method="POST" name="itemSynopsis" class='form-horizontal'
         onSubmit="return submit_once()" enctype="multipart/form-data"
         tal:attributes="action context/designator">
 
       <fieldset>
-        <legend>Basic information</legend>
         <div class='container-fluid' tal:condition="not:context/is_edit_ok">
           <dl class='dl-horizontal'>
             <dt i18n:translate="">Title</dt>
@@ -54,6 +88,7 @@
           </dl>
         </div>
         <div class='container-fluid' tal:condition="context/is_edit_ok">
+          <legend>Update the issue</legend>
           <!-- TITLE -->
           <div class='control-group vspace-two' tal:condition="context/title/is_edit_ok">
             <label class='control-label'  for='issue_title' i18n:translate="">Title</label>
@@ -61,6 +96,8 @@
               <input class='input-xxlarge' type='text' name='title' id='issue_title' tal:attributes="value context/title">
             </div>
           </div>
+
+          <div class='row-fluid vspace-two'></div>
 
           <!-- and finally, allow people to say something important -->
           <div class='row-fluid'>
@@ -100,7 +137,8 @@
               </div>
             </div>
           </div> <!-- row-fluid -->
-          
+          <!-- submit button replicated here for convenience -->
+          <input type="submit" name="submit_button" value="Submit Changes"/>          
         </div> <!-- container-fluid -->
       </fieldset>
 
@@ -111,15 +149,17 @@
             <dl class='dl-horizontal span6'>
               <dt i18n:translate="">Status</dt>
               <dd tal:content="structure context/status/plain"></dd>
-              <dt i18n:translate="">Dependencies</dt>
-              <dd tal:content="structure context/dependencies/plain"></dd>
-              <dt i18n:translate="">Superseder</dt>
-              <dd tal:content="structure context/superseder/plain"></dd>
+              <tal:block condition="is_operator">
+                <dt i18n:translate="">Dependencies</dt>
+                <dd tal:content="structure context/dependencies/plain"></dd>
+                <dt i18n:translate="">Superseder</dt>
+                <dd tal:content="structure context/superseder/plain"></dd>
+              </tal:block>
             </dl>
             <dl class='dl-horizontal span6'>
               <dt i18n:translate="">Assigned to</dt>
               <dd tal:content="structure context/assignee/plain"></dd>
-              <dt i18n:translate="">Nosy list</dt>
+              <dt i18n:translate="">Subscribers</dt>
               <dd tal:content="structure context/nosy/plain"></dd>
               <dt i18n:translate="">Priority</dt>
               <dd tal:content="structure context/priority/plain"></dd>
@@ -160,35 +200,37 @@
           </div> <!-- row-fluid -->
 
           <div class='row-fluid' tal:condition="context/id">
-            <!-- Dependencies -->
-            <div class='control-group span6'>
-              <tal:block i18n:translate="">Dependencies</tal:block>:
-              <span tal:condition="context/dependencies/is_edit_ok"
-                  tal:replace="structure python:db.issue.classhelp('id,title', filter='status=0,1', property='dependencies')" />
-              <div class='controls'>
-                <span tal:replace="structure python:context.dependencies.field(showid=1,size=20)" />
-                <span tal:condition="context/dependencies" tal:repeat="d python:context.dependencies.sorted('creation')">
-                  View: <a tal:attributes="href string:issue${d/id}" tal:content="d/id"></a>
-                </span>
+            <tal:block condition="is_operator">
+              <!-- Dependencies -->
+              <div class='control-group span6'>
+                <tal:block i18n:translate="">Dependencies</tal:block>:
+                <span tal:condition="context/dependencies/is_edit_ok"
+                      tal:replace="structure python:db.issue.classhelp('id,title,status', filter='status=-1,1,2,5', property='dependencies')" />
+                <div class='controls'>
+                  <span tal:replace="structure python:context.dependencies.field(showid=1,size=20)" />
+                  <span tal:condition="context/dependencies" tal:repeat="d python:context.dependencies.sorted('creation')">
+                    View: <a tal:attributes="href string:issue${d/id}" tal:content="d/id"></a>
+                  </span>
+                </div>
               </div>
-            </div>
-            <!-- Superseder -->
-            <div class='control-group span6'>
-              <label class='control-label'>Superseder</label>
-              <!-- FIXME
-              <tal:block i18n:translate="">Superseder</tal:block>:
-              <span tal:condition="context/superseder/is_edit_ok"
-                  tal:replace="structure python:db.issue.classhelp('id,title', filter='status=0,1', property='superseder')" />
-              -->
-              <div class='controls'>
-                <span tal:replace="structure python:context.superseder.field(showid=1, size=20)" />
-                <span tal:condition="context/superseder">
-                  <span i18n:translate="">View</span>:
-                  <a tal:content="context/superseder/id"
-                      tal:attributes="href string:issue${context/superseder/id}; title context/superseder/title;"></a> 
-                </span> 
+              <!-- Superseder -->
+              <div class='control-group span6'>
+                <label class='control-label'>Superseder</label>
+                <!-- FIXME
+                <tal:block i18n:translate="">Superseder</tal:block>:
+                <span tal:condition="context/superseder/is_edit_ok"
+                      tal:replace="structure python:db.issue.classhelp('id,title', filter='status=0,1', property='superseder')" />
+                -->
+                <div class='controls'>
+                  <span tal:replace="structure python:context.superseder.field(showid=1, size=20)" />
+                  <span tal:condition="context/superseder">
+                    <span i18n:translate="">View</span>:
+                    <a tal:content="context/superseder/id"
+                       tal:attributes="href string:issue${context/superseder/id}; title context/superseder/title;"></a> 
+                  </span> 
+                </div>
               </div>
-            </div>
+            </tal:block>
           </div> <!-- row-fluid -->
 
           <div class='row-fluid'>
@@ -203,7 +245,7 @@
             </div>
             <!-- Nosy list -->
             <div class='control-group span6'>
-              <label class='control-label' for='nosy'><tal:block i18n:translate="">Nosy List</tal:block></label>
+              <label class='control-label' for='nosy'><tal:block i18n:translate="">Subscribers</tal:block></label>
               <div class='controls'>
                 <span tal:condition="context/nosy/is_edit_ok"
                     tal:replace="structure python:db.user.classhelp('username,realname,address', property='nosy')" />
@@ -242,8 +284,8 @@
         <input type="hidden" name="@template" value="item">
         <input type="hidden" name="@required" value="title">
         <span tal:replace="structure context/submit">submit button</span>
-        <a tal:condition="context/id" tal:attributes="href context/copy_url"
-         i18n:translate="" class='btn'>Make a copy</a>
+        <!-- <a tal:condition="context/id" tal:attributes="href context/copy_url" -->
+        <!--  i18n:translate="" class='btn'>Make a copy</a> -->
       </div>
     </form>
 
@@ -287,37 +329,6 @@
         </td>
       </tr>
     </table>
-    <div class='container-fluid' tal:condition="context/messages">
-      <h3 i18n:translate="">Messages</h3>
-      <tal:block tal:repeat="msg context/messages">
-        <div class='row-fluid'>
-          <div class='span1'>
-            <a tal:attributes="href string:msg${msg/id}"
-              i18n:translate="">msg<tal:x replace="msg/id" i18n:name="id" /></a>
-          </div>
-          <div class='span7 offset2'>
-            <span i18n:translate="">Author: <tal:x replace="python:msg.author.realname.plain()"
-              i18n:name="author" /> (<tal:x replace="msg/author"/>)</span>
-            <span i18n:translate="">Date: <tal:x replace="python:msg.date.pretty('%Y-%m-%d %H:%M')"
-              i18n:name="date" /></span>
-          </div>
-          <div class='pull-right'>
-            <form style="padding:0" tal:condition="msg/is_edit_ok"
-                  tal:attributes="action string:issue${context/id}">
-             <input type="hidden" name="@remove@messages" tal:attributes="value msg/id">
-             <input type="hidden" name="@action" value="edit">
-             <input type="submit" value="remove" i18n:attributes="value">
-            </form>
-          </div>
-        </div>
-        <div class='row-fluid'>
-          <div class="content">
-            <pre tal:condition="python:msg.content.is_view_ok()"
-               tal:content="structure python:utils.localReplace(msg.content.hyperlinked())">content</pre>
-          </div>
-        </div>
-      </tal:block>
-    </div>
 
     <div class='vspace-four'></div>
     <tal:block tal:condition="context/id" tal:replace="structure context/history" />
