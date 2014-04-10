@@ -63,6 +63,7 @@ define="edit_ok context/is_edit_ok"
    <th metal:use-macro="th_label">Login Name</th>
    <td><input metal:use-macro="src_input"></td>
  </tr>
+<!-- 
  <tal:if condition="edit_ok">
  <tr tal:define="name string:password; label string:Login Password">
   <th metal:use-macro="th_label">Login Password</th>
@@ -73,6 +74,7 @@ define="edit_ok context/is_edit_ok"
   <td><input metal:use-macro="confirm_input" type="password"></td>
  </tr>
  </tal:if>
+-->
  <tal:if condition="python:request.user.hasPermission('Web Roles')">
  <tr tal:define="name string:roles; label string:Roles;">
   <th><label for="roles" i18n:translate="">Roles</label></th>
