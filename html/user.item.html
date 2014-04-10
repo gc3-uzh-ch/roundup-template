@@ -25,8 +25,8 @@ define="edit_ok context/is_edit_ok"
   tal:omit-tag="python:1" i18n:translate="">User<tal:x
   replace="context/id" i18n:name="id" /></span>
  <span tal:condition="python: context.id and edit_ok"
-  tal:omit-tag="python:1" i18n:translate="">User<tal:x
-  replace="context/id" i18n:name="id" /> Editing</span>
+  tal:omit-tag="python:1" i18n:translate="">User <tal:x
+  replace="context/username" i18n:name="id" /> Editing</span>
 </tal:block>
 
 <td class="content" metal:fill-slot="content">
