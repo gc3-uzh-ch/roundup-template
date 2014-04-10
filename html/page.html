@@ -116,7 +116,7 @@
         <div tal:condition="python:request.user.username=='anonymous'">
           <ul class='nav nav-list'>
             <li>
-              <form method="post" action="#">
+              <form method="post" action="" tal:attributes="action config/TRACKER_WEB">
                 <fieldset>
                   <legend><i class='icon-user'></i>Login form</legend>
                   <input name="__login_name" type='text' placeholder='Username' i18n:attributes="placeholder">
