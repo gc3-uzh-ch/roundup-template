@@ -56,18 +56,7 @@ import logging
 import os
 import sys
 
-LOG = logging.getLogger(__name__)
-INSTPATH = "/tmp/"
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s %(levelname)s %(message)s',
-                    filename=os.path.join(INSTPATH, "roundup_ldap.log"),
-                    filemode='a')
-
-try:
-    import ldap
-except ImportError, errmsg:
-    LOG.error("You need to have python-ldap installed (%s)." % str(errmsg))
-    raise
+import ldap
 
 from roundup import password as PW
 from roundup.cgi import exceptions
@@ -212,6 +201,7 @@ class LDAPLoginAction(LoginAction):
         # self.bind_once = bind_once
         # self.autocreate = autocreate
         LoginAction.__init__(self, *args)
+        self.LOG = self.db.get_logger()
 
     def ldap_login(self, username='', password=''):
         """Perform a login against LDAP."""
@@ -221,7 +211,7 @@ class LDAPLoginAction(LoginAction):
         # protected) bind if the password is empty and SUCCEEDS!
         if not password:
             msg = _('Empty password for user "%s"') % self.client.user
-            LOG.debug(msg)
+            self.LOG.debug(msg)
             self.client.error_message.append(msg)
             return LOGIN_FAILED
         try:
@@ -229,7 +219,7 @@ class LDAPLoginAction(LoginAction):
 #                u = None
                 dn = None
                 coding = self.coding
-                LOG.debug("Setting misc. ldap options...")
+                self.LOG.debug("Setting misc. ldap options...")
                 # ldap v2 is outdated
                 ldap.set_option(ldap.OPT_PROTOCOL_VERSION, ldap.VERSION3)
                 ldap.set_option(ldap.OPT_REFERRALS, self.referrals)
@@ -246,22 +236,22 @@ class LDAPLoginAction(LoginAction):
                         #(ldap.OPT_X_TLS_ALLOW, 1),
                     ):
                         if value is not None:
-                            LOG.debug("Setting LDAP option %s to %s",
+                            self.LOG.debug("Setting LDAP option %s to %s",
                                       option, value)
                             ldap.set_option(option, value)
 
                 server = self.server_uri
-                LOG.debug("Trying to initialize %r." % server)
+                self.LOG.debug("Trying to initialize %r." % server)
                 l = ldap.initialize(server)
-                LOG.debug("Connected to LDAP server %r." % server)
+                self.LOG.debug("Connected to LDAP server %r." % server)
 
                 if self.start_tls and server.startswith('ldap:'):
-                    LOG.debug("Trying to start TLS to %r." % server)
+                    self.LOG.debug("Trying to start TLS to %r." % server)
                     try:
                         l.start_tls_s()
-                        LOG.debug("Using TLS to %r." % server)
+                        self.LOG.debug("Using TLS to %r." % server)
                     except (ldap.SERVER_DOWN, ldap.CONNECT_ERROR), err:
-                        LOG.warning("Couldn't establish TLS to %r (err: %s)." %\
+                        self.LOG.warning("Couldn't establish TLS to %r (err: %s)." %\
                                         (server, str(err)))
                         return LOGIN_FAILED
 
@@ -269,21 +259,21 @@ class LDAPLoginAction(LoginAction):
                 # stuff entered in the form:
                 binddn = self.bind_dn % locals()
                 bindpw = self.bind_pw % locals()
-                LOG.debug("Binding as %s" % (binddn.encode(coding)))
+                self.LOG.debug("Binding as %s" % (binddn.encode(coding)))
                 l.simple_bind_s(binddn.encode(coding),
                                 bindpw.encode(coding))
-                LOG.debug("Bound with binddn %r" % binddn)
+                self.LOG.debug("Bound with binddn %r" % binddn)
                 if self.search_bind_dn:
-                    LOG.debug("Binding as %s for searching attrs",
+                    self.LOG.debug("Binding as %s for searching attrs",
                               binddn.encode(coding))
                     l.simple_bind_s(self.search_bind_dn.encode(coding),
                                    self.search_bind_pw.encode(coding))
-                    LOG.debug("Bound with binddn %r" % self.search_bind_dn)
+                    self.LOG.debug("Bound with binddn %r" % self.search_bind_dn)
 
                 # you can use %(username)s here to get the stuff entered in
                 # the form:
                 filterstr = self.search_filter % locals()
-                LOG.debug("Searching %r" % filterstr)
+                self.LOG.debug("Searching %r" % filterstr)
                 attrs = [getattr(self, attr) for attr in [
                                          'email_attribute',
                                          'aliasname_attribute',
@@ -297,28 +287,28 @@ class LDAPLoginAction(LoginAction):
                 lusers = [(dn, ldap_dict) for dn, ldap_dict in lusers \
                               if dn is not None]
                 for dn, ldap_dict in lusers:
-                    LOG.debug("dn:%r" % dn)
+                    self.LOG.debug("dn:%r" % dn)
                     for key, val in ldap_dict.items():
-                        LOG.debug("    %r: %r" % (key, val))
+                        self.LOG.debug("    %r: %r" % (key, val))
 
                 result_length = len(lusers)
                 if result_length != 1:
                     if result_length > 1:
-                        LOG.warning("Search found more than one (%d) matches \
+                        self.LOG.warning("Search found more than one (%d) matches \
 for %r." % (result_length, filterstr))
                     if result_length == 0:
-                        LOG.debug("Search found no matches for %r." % \
+                        self.LOG.debug("Search found no matches for %r." % \
                                       (filterstr, ))
                     msg = _("Invalid username or password.")
-                    LOG.debug(msg)
+                    self.LOG.debug(msg)
                     self.client.error_message.append(msg)
                     return LOGIN_FAILED
 
                 dn, ldap_dict = lusers[0]
                 if not self.bind_once:
-                    LOG.debug("DN found is %r, trying to bind with pw" % dn)
+                    self.LOG.debug("DN found is %r, trying to bind with pw" % dn)
                     l.simple_bind_s(dn, password.encode(coding))
-                    LOG.debug("Bound with dn %r (username: %r)" % \
+                    self.LOG.debug("Bound with dn %r (username: %r)" % \
                                   (dn, username))
 
                 if self.email_callback is None:
@@ -344,7 +334,7 @@ decode(coding)
                         aliasname = sn
                 aliasname = aliasname.decode(coding)
 
-                LOG.debug("User data [%r, %r, %r] " % \
+                self.LOG.debug("User data [%r, %r, %r] " % \
                               (username, email, aliasname))
                 if not email:
                     email = '%s@s3it.uzh.ch' % username
@@ -354,17 +344,17 @@ decode(coding)
                                          realname=aliasname)
                 msg = "Login succeded with LDAP authentication for user '%s'." \
 % username
-                LOG.debug(msg)
+                self.LOG.debug(msg)
                 # Determine whether the user has permission to log in. Base
                 # behaviour is to check the user has "Web Access".
                 rights = "Web Access"
                 if not self.hasPermission(rights):
                     msg = _("You do not have permission '%s' to login" % rights)
-                    LOG.debug("%s, %s, %s", msg, self.client.user, rights)
+                    self.LOG.debug("%s, %s, %s", msg, self.client.user, rights)
                     raise exceptions.LoginError, msg
                 return LOGIN_SUCCEDED
             except ldap.INVALID_CREDENTIALS, err:
-                LOG.debug("invalid credentials (wrong password?) for dn %r \
+                self.LOG.debug("invalid credentials (wrong password?) for dn %r \
 (username: %r)" % (dn, username))
                 return LOGIN_FAILED
         except ldap.SERVER_DOWN, err:
@@ -373,15 +363,15 @@ decode(coding)
             # second ldap authenticator that queries a backup server or any
             # other auth method).
             ## only one auth server supported for roundup, change it
-            LOG.error("LDAP server %s failed (%s). Trying to authenticate \
+            self.LOG.error("LDAP server %s failed (%s). Trying to authenticate \
 with next auth list entry." % (server, str(err)))
             msg = "LDAP server %(server)s failed." % {'server': server}
-            LOG.debug(msg)
+            self.LOG.debug(msg)
             return LOGIN_FAILED
         except Exception, err:
-            LOG.error("Couldn't establish TLS to %r (err: %s)." % (server,
+            self.LOG.error("Couldn't establish TLS to %r (err: %s)." % (server,
                                                                      str(err)))
-            LOG.exception("caught an exception, traceback follows...")
+            self.LOG.exception("caught an exception, traceback follows...")
             return LOGIN_FAILED
 
     def set_values(self, props):
@@ -396,7 +386,7 @@ with next auth list entry." % (server, str(err)))
             self.client.userid = self.db.user.lookup(self.client.user)
         except KeyError:
             msg = _("Unknown user '%s'") % self.client.user
-            LOG.debug("__['%s'", msg)
+            self.LOG.debug("__['%s'", msg)
             self.client.error_message.append(
                         _("Unknown user  '%s'") % self.client.user)
             return False
@@ -409,7 +399,7 @@ with next auth list entry." % (server, str(err)))
             return LOGIN_FAILED
         if not self.verifyPassword(self.client.userid, password):
             msg = _('Invalid password')
-            LOG.debug("%s for userid=%s", msg, self.client.userid)
+            self.LOG.debug("%s for userid=%s", msg, self.client.userid)
             self.client.error_message.append(msg)
             return LOGIN_FAILED
 
@@ -418,7 +408,7 @@ with next auth list entry." % (server, str(err)))
         rights = "Web Access"
         if not self.hasPermission(rights):
             msg = _("You do not have permission to login")
-            LOG.debug("%s, %s, %s", msg, self.client.user, rights)
+            self.LOG.debug("%s, %s, %s", msg, self.client.user, rights)
             raise exceptions.LoginError, msg
         return LOGIN_SUCCEDED
 
@@ -426,25 +416,24 @@ with next auth list entry." % (server, str(err)))
         """Verify the login of `username` with `password`. Try first LDAP if
         this is specified as authentication source, and then login against
         local database."""
-        LOG = self.db.get_logger()
-        LOG.debug("username=%s password=%s", username, '*'*len(password))
+        self.LOG.debug("username=%s password=%s", username, '*'*len(password))
         self.set_values(CONFIG_VALS)
         authenticated = False
         if not self.use_local_auth:
-            LOG.debug("LDAP authentication")
+            self.LOG.debug("LDAP authentication")
             authenticated = self.ldap_login(username, password)
             if authenticated:
-                LOG.debug("User '%s' authenticated against LDAP.",
+                self.LOG.debug("User '%s' authenticated against LDAP.",
                           username)
         if not authenticated:
-            LOG.debug("Local database authentication")
+            self.LOG.debug("Local database authentication")
             authenticated = self.local_login(password)
             if authenticated:
-                LOG.debug("User '%s' authenticated against local database.",
+                self.LOG.debug("User '%s' authenticated against local database.",
                           username)
         if not authenticated:
             msg = _("Could not authenticate user '%s'" % username)
-            LOG.debug(msg)
+            self.LOG.debug(msg)
             raise exceptions.LoginError, msg
         return authenticated
 
@@ -461,17 +450,17 @@ with next auth list entry." % (server, str(err)))
             if self.autocreate:
                 for pkey, prop in props.items():
                     try:
-                        LOG.debug("Look key '%s' for user '%s'", pkey, uid)
+                        self.LOG.debug("Look key '%s' for user '%s'", pkey, uid)
                         value = self.db.user.get(uid, pkey)
-                        LOG.debug("Value %r for key,user '%s','%s'", value,
+                        self.LOG.debug("Value %r for key,user '%s','%s'", value,
                                   pkey, uid)
                         if not value:
-                            LOG.debug("Set value %r for property %r of user \
+                            self.LOG.debug("Set value %r for property %r of user \
 '%s'", props[pkey], pkey, self.client.user)
                             pair = {pkey : props[pkey]}
                             self.db.user.set(uid, **pair)
                     except Exception, err_msg:
-                        LOG.exception("caught an exception, traceback follows.\
+                        self.LOG.exception("caught an exception, traceback follows.\
 ..")
         except KeyError:
             # add new user to local database
@@ -481,7 +470,7 @@ with next auth list entry." % (server, str(err)))
             ## ?? why do we re-read the userid ??
             # self.client.userid = self.db.user.lookup(self.client.user)
             msg = u"New account created for user '%s'" % props['username']
-            LOG.debug(msg)
+            self.LOG.debug(msg)
             self.client.ok_message.append(msg)
 
 def init(instance):
