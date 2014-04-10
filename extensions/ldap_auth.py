@@ -114,6 +114,10 @@ DEFAULT_VALS = {
     # "(&(cn=%(username)s)(memberOf=CN=WikiUsers,OU=Groups,\
     #  DC=example,DC=org))"
     'search_filter' : '(uid=%(username)s)',
+    # dn and pw to use to access info on the user, in case the ldap
+    # server do not allow binding as user _and_ reading information.
+    'search_bind_dn': '',
+    'search_bind_pw': '',
     # some attribute names we use to extract information from LDAP:
     # ('givenName') ldap attribute we get the first name from
     'givenname_attribute' : None,
@@ -130,11 +134,11 @@ DEFAULT_VALS = {
     # how long we wait for the ldap server [s]
     'timeout' : 10,
     # 0 = No, 1 = Try, 2 = Required
-    'start_tls' : False,
-    'tls_cacertdir' : '',
-    'tls_cacertfile' : '',
-    'tls_certfile' : '',
-    'tls_keyfile' : '',
+    'start_tls' : 0,
+    'tls_cacertdir' : None,
+    'tls_cacertfile' : None,
+    'tls_certfile' : None,
+    'tls_keyfile' : None,
     # 0 == ldap.OPT_X_TLS_NEVER (needed for self-signed certs)
     'tls_require_cert' : 0,
     # set to True to only do one bind - useful if configured to bind as
@@ -144,16 +148,32 @@ DEFAULT_VALS = {
     'autocreate' : False,
     }
 
-CONFIG_VALS = {'referrals' : 0,
+GC3_CONFIG_VALS = {'referrals' : 0,
                'use_local_auth' : None,
                'server_uri' : 'ldap://192.168.160.35',
                'base_dn' : 'dc=gc3,dc=uzh,dc=ch',
+               'bind_dn': 'uid=%(username)s,ou=People,dc=gc3,dc=uzh,dc=ch',
+               'bind_pw': '%(password)s',
                'search_filter' : '(uid=%(username)s)',
                'givenname_attribute' : 'cn',
                'surname_attribute' : 'cn',
                'aliasname_attribute' : 'cn',
                # 'email_attribute' : 'mail',
                'autocreate' : True
+               }
+
+CONFIG_VALS = {'referrals' : 0,
+               'use_local_auth' : None,
+               'server_uri' : 'ldaps://ldapauth.uzh.ch',
+               'base_dn' : 'ou=People,ou=WebPass,ou=id,dc=uzh,dc=ch',
+               'bind_dn': 'uid=%(username)s,ou=People,ou=WebPass,ou=id,dc=uzh,dc=ch',
+               'bind_pw': '%(password)s',
+               'search_filter' : '(uid=%(username)s)',
+               'givenname_attribute' : 'givenName',
+               'surname_attribute' : 'sn',
+               'aliasname_attribute' : 'cn',
+               'email_attribute' : 'mail',
+               'autocreate' : True,
                }
 
 class LDAPLoginAction(LoginAction):
@@ -226,6 +246,8 @@ class LDAPLoginAction(LoginAction):
                         #(ldap.OPT_X_TLS_ALLOW, 1),
                     ):
                         if value is not None:
+                            LOG.debug("Setting LDAP option %s to %s",
+                                      option, value)
                             ldap.set_option(option, value)
 
                 server = self.server_uri
@@ -247,8 +269,16 @@ class LDAPLoginAction(LoginAction):
                 # stuff entered in the form:
                 binddn = self.bind_dn % locals()
                 bindpw = self.bind_pw % locals()
-                l.simple_bind_s(binddn.encode(coding), bindpw.encode(coding))
+                LOG.debug("Binding as %s" % (binddn.encode(coding)))
+                l.simple_bind_s(binddn.encode(coding),
+                                bindpw.encode(coding))
                 LOG.debug("Bound with binddn %r" % binddn)
+                if self.search_bind_dn:
+                    LOG.debug("Binding as %s for searching attrs",
+                              binddn.encode(coding))
+                    l.simple_bind_s(self.search_bind_dn.encode(coding),
+                                   self.search_bind_pw.encode(coding))
+                    LOG.debug("Bound with binddn %r" % self.search_bind_dn)
 
                 # you can use %(username)s here to get the stuff entered in
                 # the form:
