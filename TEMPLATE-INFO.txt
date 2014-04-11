@@ -1,0 +1,5 @@
+Name: s3it
+Description: This issue tracker is similar to responsive, but it is
+             oriented for generic support requests for the S3IT group
+             of the University of Zurich
+Intended-For: the S3IT group
