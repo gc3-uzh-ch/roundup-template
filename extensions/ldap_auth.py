@@ -52,6 +52,7 @@ __docformat__ = 'reStructuredText'
 __author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
 
 # From http://www.roundup-tracker.org/cgi-bin/moin.cgi/LDAPLogin2
+from ConfigParser import RawConfigParser, SafeConfigParser
 import logging
 import os
 import sys
@@ -171,37 +172,31 @@ class LDAPLoginAction(LoginAction):
         for that user. The session is kept by moin automatically.
     """
     def __init__(self, *args):
-        self.set_values(DEFAULT_VALS)
-        # self.use_local_auth = use_local_auth
-
-        # self.server_uri = server_uri
-        # self.bind_dn = bind_dn
-        # self.bind_pw = bind_pw
-        # self.base_dn = base_dn
-        # self.scope = scope
-        # self.referrals = referrals
-        # self.search_filter = search_filter
-
-        # self.givenname_attribute = givenname_attribute
-        # self.surname_attribute = surname_attribute
-        # self.aliasname_attribute = aliasname_attribute
-        # self.email_attribute = email_attribute
-        # self.email_callback = email_callback
-
-        # self.coding = coding
-        # self.timeout = timeout
-
-        # self.start_tls = start_tls
-        # self.tls_cacertdir = tls_cacertdir
-        # self.tls_cacertfile = tls_cacertfile
-        # self.tls_certfile = tls_certfile
-        # self.tls_keyfile = tls_keyfile
-        # self.tls_require_cert = tls_require_cert
-
-        # self.bind_once = bind_once
-        # self.autocreate = autocreate
         LoginAction.__init__(self, *args)
+        self.set_values(DEFAULT_VALS)
         self.LOG = self.db.get_logger()
+        ldap_conf_file = os.path.join(self.db.config['HOME'],
+                                      'extensions',
+                                      'ldap_config.ini')
+        if os.path.exists(ldap_conf_file):
+            self.LOG.debug("Reading configuration file 'ldap_config.ini'")
+            cfg = RawConfigParser()
+            cfg.read(ldap_conf_file)
+            if cfg.has_section('ldap'):
+               for (key, value) in cfg.items('ldap'):
+                   self.LOG.debug("Setting option %s to %s" %(key, value))
+                   if key in ['use_local_auth', 'autocreate', 'bind_once']:
+                       setattr(self, key, cfg.getboolean('ldap', key))
+                   elif key in ['referrals', 'start_tls', 'timeout']:
+                       setattr(self, key, cfg.getint('ldap', key))
+                   else:
+                       setattr(self, key, value)
+            else:
+               self.LOG.info("Skipping parsing of file ldap_config.ini as it has no 'ldap' section.")
+
+    def set_values(self, kw):
+        for key, value in kw.items():
+            setattr(self, key, value)
 
     def ldap_login(self, username='', password=''):
         """Perform a login against LDAP."""
@@ -216,7 +211,6 @@ class LDAPLoginAction(LoginAction):
             return LOGIN_FAILED
         try:
             try:
-#                u = None
                 dn = None
                 coding = self.coding
                 self.LOG.debug("Setting misc. ldap options...")
@@ -374,10 +368,6 @@ with next auth list entry." % (server, str(err)))
             self.LOG.exception("caught an exception, traceback follows...")
             return LOGIN_FAILED
 
-    def set_values(self, props):
-        for kprop, value in props.items():
-            setattr(self, kprop, value)
-
     def local_user_exists(self):
         """Verify if the given user exists. As a side effect set the
         'client.userid'."""
@@ -417,7 +407,6 @@ with next auth list entry." % (server, str(err)))
         this is specified as authentication source, and then login against
         local database."""
         self.LOG.debug("username=%s password=%s", username, '*'*len(password))
-        self.set_values(CONFIG_VALS)
         authenticated = False
         if not self.use_local_auth:
             self.LOG.debug("LDAP authentication")
@@ -476,3 +465,4 @@ with next auth list entry." % (server, str(err)))
 def init(instance):
     """Register the roundup action 'login'."""
     instance.registerAction('login', LDAPLoginAction)
+#SHA: f1ed559bf6933bf093f58155d4fee7c342ae149b
