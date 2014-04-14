@@ -24,6 +24,7 @@
           <tal:x replace="context/id" i18n:name="id" /> Editing</span>
   </tal:block>
 
+
 <div metal:fill-slot="content"
     tal:define="is_operator python:request.user.hasRole('Operator')" >
 
@@ -60,7 +61,7 @@
         <div class='row-fluid'>
           <div class="content">
             <pre tal:condition="python:msg.content.is_view_ok()"
-               tal:content="structure python:utils.localReplace(msg.content.hyperlinked())">content</pre>
+               tal:replace="structure python:utils.markdown(msg.content.hyperlinked())">content</pre>
           </div>
         </div>
       </tal:block>
@@ -332,4 +333,3 @@
 </div> <!-- content -->
 
 </tal:block>
-<!-- SHA: 63c1f61bdb2fdffac5119c342c33b67f676a2d30 -->

@@ -25,8 +25,8 @@ define="edit_ok context/is_edit_ok"
   tal:omit-tag="python:1" i18n:translate="">User<tal:x
   replace="context/id" i18n:name="id" /></span>
  <span tal:condition="python: context.id and edit_ok"
-  tal:omit-tag="python:1" i18n:translate="">User <tal:x
-  replace="context/username" i18n:name="id" /> Editing</span>
+  tal:omit-tag="python:1" i18n:translate="">User<tal:x
+  replace="context/id" i18n:name="id" /> Editing</span>
 </tal:block>
 
 <td class="content" metal:fill-slot="content">
@@ -63,7 +63,6 @@ define="edit_ok context/is_edit_ok"
    <th metal:use-macro="th_label">Login Name</th>
    <td><input metal:use-macro="src_input"></td>
  </tr>
-<!-- 
  <tal:if condition="edit_ok">
  <tr tal:define="name string:password; label string:Login Password">
   <th metal:use-macro="th_label">Login Password</th>
@@ -74,7 +73,6 @@ define="edit_ok context/is_edit_ok"
   <td><input metal:use-macro="confirm_input" type="password"></td>
  </tr>
  </tal:if>
--->
  <tal:if condition="python:request.user.hasPermission('Web Roles')">
  <tr tal:define="name string:roles; label string:Roles;">
   <th><label for="roles" i18n:translate="">Roles</label></th>
@@ -165,4 +163,3 @@ anybody@everywhere.net
 </td>
 
 </tal:doc>
-<!-- SHA: 300accf7f34b5967de1f58a289fd98cae27176b6 -->

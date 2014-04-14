@@ -16,6 +16,8 @@
     </style>
     <link rel="stylesheet" href="@@file/bootstrap-responsive.min.css">
     <link rel="stylesheet" href="@@file/style.css">
+    <link rel="stylesheet" href="@@file/bootstrap-markdown.js">
+    <link rel="stylesheet" href="@@file/markdown.js">
     <script tal:replace="structure request/base_javascript"></script>
     <metal:x define-slot="more-javascript" />
   </head>
@@ -101,10 +103,9 @@
                     i18n:translate="">Unassigned issues</a>
           </li>
           <li>
-            <a href="issue?@template=search&status=1"
-            i18n:translate="">Advanced search</a>
+            <a href="issue?@template=search&status=1" i18n:translate="">Search</a>
           </li>
-          <li tal:condition="python: request.user.hasRole('Operator')">
+          <li>
             <form method="post" action="#" class='form-inline'>
               <input class="input-small" type="text" name="@number"/>
               <input type="submit" class="btn" value="Show issue" i18n:attributes="value"/>
@@ -387,4 +388,3 @@ See user.item.html in the classic template for examples.
     tal:attributes="id name; name name; readonly not:edit_ok" value=""/>
     <input metal:define-macro="user_confirm_input" type="password"
     tal:attributes="id name; name string:@confirm@$name; readonly not:edit_ok" value=""/>
-<!-- SHA: d5be2cb284f7dee13248bf6845264e77700faa91 -->
