@@ -258,4 +258,3 @@ db.security.addPermissionToRole('Anonymous', 'Web Access')
 
 # vim: set filetype=python sts=4 sw=4 et si :
 
-#SHA: 72b50c5ab69aacd0269ba9a46c36297d40ae1e64

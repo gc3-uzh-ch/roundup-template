@@ -121,4 +121,3 @@ def init(db):
     db.issue.audit('create', updatenosy)
     db.issue.audit('set', updatenosy)
 
-#SHA: 77f5bc49455c549affcb9dcabfa49e4f6ac9a92f
