@@ -51,11 +51,9 @@
   </div> <!-- navbar -->
   <div class='container-fluid'>
     <div class='row-fluid'>
-      <div class="span3 well">
+      <div class="span2 well">
         <ul tal:condition="python:request.user.hasPermission('View', 'issue')" class='nav nav-list'>
           <li class='nav-header'><i class='icon-fire'></i>Issues</li>
-          <li><a href="issue" i18n:translate="" tal:condition="python:request.user.hasRole('Operator')">All Issues</a>
-          </li>
           <li tal:condition="python:request.user.hasPermission('Create', 'issue')">
             <a href="issue?@template=item" i18n:translate="">Create New</a>
           </li>
@@ -102,8 +100,10 @@
                                     })"
                     i18n:translate="">Unassigned issues</a>
           </li>
+          <li><a href="issue" i18n:translate="" tal:condition="python:request.user.hasRole('Operator')">All Issues</a>
+          </li>
           <li>
-            <a href="issue?@template=search&status=1" i18n:translate="">Search</a>
+            <a href="issue?@template=search&status=1" i18n:translate="">Search in open issues</a>
           </li>
           <li>
             <form method="post" action="#" class='form-inline'>
