@@ -12,9 +12,15 @@ h1 {
   line-height: 24px;
 }
 
+.issue div .content {
+    background-color: #F8F8F8;
+    border: #A8A8A8 solid 1px;
+    padding: 1em 1em 0em 1em;
+    margin-bottom: 1em;
+}
+.input-small { width: 5em; }
 .vspace-one { margin-top: 1em; }
 .vspace-two { margin-top: 2em; }
 .vspace-three { margin-top: 3em; }
 .vspace-four { margin-top: 4em; }
 .vspace-five { margin-top: 5em; }
-/* SHA: fd670bc013d154dc6e6f565a0eb182a8bb23579e */
