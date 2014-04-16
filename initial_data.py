@@ -10,7 +10,8 @@ topic.create(name="Schroedinger", order="2")
 topic.create(name="Hydra", order="3")
 topic.create(name="GC3Pie", order="4")
 topic.create(name="Elasticluster", order="5")
-topic.create(name="Generic request", order="6")
+topic.create(name="Roundup", order="6")
+topic.create(name="Generic request", order="7")
 
 priority = db.getclass('priority')
 priority.create(name='immediate', order='1')
@@ -39,4 +40,4 @@ user.create(username="user", roles='User', password=adminpw)
 user.create(username="operator", roles='User, Operator', password=adminpw)
 # user.create(username="coordinator", roles='User, Developer, Coordinator')
 
-#SHA: ee91ee3b5f8f356f7f3c8f26d21eba2fc9f4e17f
+#SHA: 86d4a7d59b383c0063c7d1e5d411a6a92ad7e017
