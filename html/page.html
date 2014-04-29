@@ -26,7 +26,7 @@
                    issue_columns string:id,activity,title,creator,status;
                    issue_columns_showall string:id,activity,title,creator,assignee,status;
                    issue_status_notclosed string:-1,1,2,5;
-                   ">
+                   is_operator python:request.user.hasRole('Operator');">
   <div class="navbar navbar-fixed-top">
     <div class='navbar-inner'>
       <div class='container'>
@@ -51,7 +51,7 @@
   </div> <!-- navbar -->
   <div class='container-fluid'>
     <div class='row-fluid'>
-      <div class="span2 well">
+      <div class="span3 well">
         <ul tal:condition="python:request.user.hasPermission('View', 'issue')" class='nav nav-list'>
           <li class='nav-header'><i class='icon-fire'></i>Issues</li>
           <li tal:condition="python:request.user.hasPermission('Create', 'issue')">
@@ -70,7 +70,7 @@
                                     '@startwith': 0,
                                     })"
                     i18n:translate=""
-               tal:condition="python:request.user.hasRole('Operator')">Open issues</a>
+               tal:condition="is_operator">Open issues</a>
             <a href="#"
                 tal:attributes="href python:request.indexargs_url('issue', {
                                     '@sort': '-activity',
@@ -84,7 +84,7 @@
                                     '@startwith': 0,
                                     })"
                     i18n:translate=""
-               tal:condition="python: not request.user.hasRole('Operator')">My issues</a>
+               tal:condition="not: is_operator">My issues</a>
           </li>
           <li><a href="#"
                   tal:attributes="href python:request.indexargs_url('issue', {
@@ -100,8 +100,21 @@
                                     })"
                     i18n:translate="">Unassigned issues</a>
           </li>
-          <li><a href="issue" i18n:translate="" tal:condition="python:request.user.hasRole('Operator')">All Issues</a>
+          <li><a href="issue" i18n:translate="" tal:condition="is_operator">All Issues</a>
           </li>
+          <!-- <li tal:condition="is_operator"> -->
+          <!--   <form method="get" name="itemSynopsis" -->
+          <!--         tal:attributes="action request/classname" -->
+          <!--         tal:define="name string:priority; -->
+          <!--                     db_klass string:topic; -->
+          <!--                     db_content string:name;"> -->
+          <!--     <select> -->
+          <!--     <option tal:repeat="s python:db[db_klass].list()" -->
+		  <!--   		  tal:content="python:s[db_content]" -->
+		  <!--   		  i18n:translate=""></option> -->
+          <!--     </select> -->
+          <!--   </form> -->
+          <!-- </li> -->
           <li>
             <a href="issue?@template=search&status=1" i18n:translate="">Search in open issues</a>
           </li>
@@ -158,7 +171,7 @@
                                          '@dispname': i18n.gettext('Issues assigned to you'),
                                          '@startwith': 0})"
                         i18n:translate=""
-                 tal:condition="python: request.user.hasRole('Operator')">Issues assigned to you</a>
+                 tal:condition="is_operator">Issues assigned to you</a>
             </li>
             <li>
               <a tal:attributes="href string:user${request/user/id}" i18n:translate="">Your Details</a>
@@ -176,8 +189,7 @@
               </ul>
            </li>
            <li class=""
-               tal:condition="python:request.user.hasRole('Operator')
-               or request.user.hasRole('Admin')">
+               tal:condition="python:is_operator or request.user.hasRole('Admin')">
             <b i18n:translate="">Administration</b>
             <ul>
              <li tal:condition="python:request.user.hasPermission('Edit', None)">
