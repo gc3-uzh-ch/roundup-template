@@ -93,7 +93,8 @@ def properties_updater(db, cl, nodeid, newvalues):
         elif isinstance(propclass, roundup.hyperdb.Link):
             propdb = db.getclass(propclass.classname)
             propvalue = propdb.stringFind(**{propdb.key: match.group('value')})
-            issue[propname] = propvalue[0]
+            if propvalue:
+                issue[propname] = propvalue[0]
         else:
             issue[propname] = propclass.from_raw(match.group('value'))
             
