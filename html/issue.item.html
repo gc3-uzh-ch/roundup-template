@@ -61,8 +61,21 @@
         <div class='row-fluid'>
           <div class="content">
             <pre tal:condition="python:msg.content.is_view_ok()"
-               tal:replace="structure python:utils.markdown(msg.content.hyperlinked())">content</pre>
+               tal:replace="structure python:utils.markdown(msg.content.plain())">content</pre>
           </div>
+          <tal:block tal:condition="msg/files">
+            <h5>Attachments</h5>
+            <ul>
+              <tal:block tal:repeat="file msg/files">
+                <li>
+                  <a tal:attributes="href file/download_url"
+                     tal:content="file/name">dld link</a>
+                  <span tal:condition="file/description"
+                     tal:content="string: (${file/description})" />
+                </li>
+              </tal:block>
+            </ul>
+          </tal:block>
         </div>
       </tal:block>
     </div>
