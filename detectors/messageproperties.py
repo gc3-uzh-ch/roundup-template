@@ -46,10 +46,14 @@ def properties_updater(db, cl, nodeid, newvalues):
     if not nodeid:
         return
 
+    log = db.get_logger().getChild('messageproperties')
+
     msg = db.msg.getnode(nodeid)
     issues = db.issue.find(messages=nodeid)
     if not issues:
         # No issues found for this message! How is that possible?
+        log.error("No issue related to msg %s!!! Stopping processing",
+                  nodeid)
         return
 
     issue = db.issue.getnode(issues[0])
@@ -61,12 +65,15 @@ def properties_updater(db, cl, nodeid, newvalues):
         
         if not match or match.group('prop').lower() not in db.issue.properties:
             # We are done parsing the input
+            log.info("No more line to process in content body")
             break
 
+        log.debug("Processing content line '%s'", line)
         contentlines.remove(line)
         propname = match.group('prop').lower()
         propclass = db.issue.properties[propname]
         
+        log.debug("Property '%s' is a %s.", propname, propclass.classname)
         if isinstance(propclass, roundup.hyperdb.Multilink):
             propdb = db.getclass(propclass.classname)
             # If at least one property name starts with +, all properties will be
@@ -80,27 +87,33 @@ def properties_updater(db, cl, nodeid, newvalues):
             prop_set = sum([propdb.stringFind(**{propdb.key: p}) for p in all_props if p[0] not in ('+', '-')],
                            [])
 
-            cur_topics = issue.topics
+            cur_list = issue[propname]
             for i in prop_del:
-                cur_topics.remove(i)
+                cur_list.remove(i)
             if prop_del or prop_add:
                 for i in prop_add + prop_set:
-                    cur_topics.append(i)
+                    cur_list.append(i)
             else:
-                cur_topics = prop_add + prop_set
+                cur_list = prop_add + prop_set
 
-            issue[propname] = list(set(cur_topics))
+            log.debug("Setting property %s to %s.",
+                      propname, str.join(', ', set(cur_list)))
+            issue[propname] = list(set(cur_list))
         elif isinstance(propclass, roundup.hyperdb.Link):
             propdb = db.getclass(propclass.classname)
             propvalue = propdb.stringFind(**{propdb.key: match.group('value')})
             if propvalue:
+                log.debug("Setting property %s to %s.", propname, propvalue[0])
                 issue[propname] = propvalue[0]
         else:
-            issue[propname] = propclass.from_raw(match.group('value'))
+            propvalue = propclass.from_raw(match.group('value'))
+            log.debug("Setting property %s to %s.", propname, propvalue)
+            issue[propname] = propvalue
             
     newcontent = str.join('\n', contentlines).strip()
 
     if newcontent != msg.content:
+        log.debug("Removing 'command' lines from content.")
         newvalues['content'] = newcontent
         msg.content = newcontent
         msg.summary = msg.content.split('\n')[0]
