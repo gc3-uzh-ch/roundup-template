@@ -235,11 +235,13 @@ db.security.addPermissionToRole('Anonymous', 'Web Access')
 # "Create" user Permission below)
 # This is disabled by default to stop spam from auto-registering users on
 # public trackers.
-#db.security.addPermissionToRole('Anonymous', 'Email Access')
+db.security.addPermissionToRole('Anonymous', 'Email Access')
 
 # Assign the appropriate permissions to the anonymous user's Anonymous
 # Role. Choices here are:
 # - Allow anonymous users to register
+db.security.addPermission(name='Register', klass='user')
+db.security.addPermissionToRole('Anonymous', 'Register', 'user')
 # db.security.addPermissionToRole('Anonymous', 'Create', 'user')
 
 # Allow anonymous users access to view issues (and the related, linked
