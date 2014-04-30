@@ -18,7 +18,14 @@
     <link rel="stylesheet" href="@@file/style.css">
     <link rel="stylesheet" href="@@file/bootstrap-markdown.js">
     <link rel="stylesheet" href="@@file/markdown.js">
-    <script tal:replace="structure request/base_javascript"></script>
+
+    <script src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <script>
+      $(document).ready(function(){
+$('.dropdown-toggle').dropdown();
+      });
+    </script>
     <metal:x define-slot="more-javascript" />
   </head>
   <body tal:attributes="class request/classname"
@@ -26,7 +33,8 @@
                    issue_columns string:id,activity,title,creator,status;
                    issue_columns_showall string:id,activity,title,creator,assignee,status,topics;
                    issue_status_notclosed string:-1,1,2,5;
-                   is_operator python:request.user.hasRole('Operator');">
+                   is_operator
+                   python:request.user.hasRole('Operator');">
   <div class="navbar navbar-fixed-top">
     <div class='navbar-inner'>
       <div class='container'>
@@ -119,12 +127,35 @@
             <a href="issue?@template=search&status=1" i18n:translate="">Search in open issues</a>
           </li>
           <li>
-            <form method="post" action="#" class='form-inline'>
+            <form method="post" action="#" class="form-inline">
+              <input type="submit" class="btn" value="Jump to issue N." i18n:attributes="value"/>
               <input class="input-small" type="text" name="@number"/>
-              <input type="submit" class="btn" value="Show issue" i18n:attributes="value"/>
-              <input type="hidden" name="@type" value="issue"/>
-              <input type="hidden" name="@action" value="show"/>
+              <input type="hidden" name="@type" value="issue" />
+              <input type="hidden" name="@action" value="show" />
             </form>
+          </li>
+          <li>
+      
+            <div class="btn-group">
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                Show issues about <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu" role="menu"
+                tal:define="baseurl python:request.indexargs_url('issue', {
+                            '@group': 'priority',
+                            '@filter': 'status,assignee,topics',
+                            '@columns': issue_columns_showall,
+                            '@search_text': '',
+                            'status': issue_status_notclosed,
+                            '@dispname': i18n.gettext('Show Unassigned'),
+                            '@startwith': 0,
+                            })">
+                  <tal:block tal:repeat="topic db/topic/list" >
+                    <li><a tal:attributes="href string:${baseurl}&topics=${topic/id}"
+                           tal:content="topic/name" /></li>
+                  </tal:block>
+              </ul>
+            </div>
           </li>
         </ul>
         <hr>
