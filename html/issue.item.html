@@ -67,7 +67,7 @@
             <h5>Attachments</h5>
             <ul>
               <tal:block tal:repeat="file msg/files">
-                <li>
+                <li tal:condition="python: file.id in context.files">
                   <a tal:attributes="href file/download_url"
                      tal:content="file/name">dld link</a>
                   <span tal:condition="file/description"
