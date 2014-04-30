@@ -32,7 +32,8 @@ def nosyreaction(db, cl, nodeid, oldvalues):
         try:
             # If assignee(s) have been updated, send the message
             # around.
-            if issue.assignee != oldvalues['assignee']:
+            if issue.assignee != oldvalues['assignee'] or \
+               issue.status != oldvalues.get('status', ''):
                 cl.nosymessage(nodeid, None, oldvalues)
         except roundupdb.MessageSendError, message:
             raise roundupdb.DetectorError, message        
