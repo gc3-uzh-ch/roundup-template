@@ -18,11 +18,24 @@ def nosyreaction(db, cl, nodeid, oldvalues):
         then provides a log of when the message was sent to whom. 
     '''
     # send a copy of all new messages to the nosy list
-    for msgid in determineNewMessages(cl, nodeid, oldvalues):
+    messages = determineNewMessages(cl, nodeid, oldvalues)
+    for msgid in messages:
         try:
             cl.nosymessage(nodeid, msgid, oldvalues)
         except roundupdb.MessageSendError, message:
             raise roundupdb.DetectorError, message
+
+    # If the issue was updated without an update message, `messages`
+    # is empty.
+    if not messages:
+        issue = db.issue.getnode(nodeid)
+        try:
+            # If assignee(s) have been updated, send the message
+            # around.
+            if issue.assignee != oldvalues['assignee']:
+                cl.nosymessage(nodeid, None, oldvalues)
+        except roundupdb.MessageSendError, message:
+            raise roundupdb.DetectorError, message        
 
 def determineNewMessages(cl, nodeid, oldvalues):
     ''' Figure a list of the messages that are being added to the given
