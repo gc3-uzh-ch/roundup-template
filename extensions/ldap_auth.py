@@ -174,9 +174,8 @@ class LDAPLoginAction(LoginAction):
     def __init__(self, *args):
         LoginAction.__init__(self, *args)
         self.set_values(DEFAULT_VALS)
-        self.LOG = self.db.get_logger()
-        ldap_conf_file = os.path.join(self.db.config['HOME'],
-                                      'extensions',
+        self.LOG = self.db.get_logger().getChild('ldap_auth')
+        ldap_conf_file = os.path.join(self.db.config.ext['HOME'],
                                       'ldap_config.ini')
         if os.path.exists(ldap_conf_file):
             self.LOG.debug("Reading configuration file 'ldap_config.ini'")
@@ -189,10 +188,13 @@ class LDAPLoginAction(LoginAction):
                        setattr(self, key, cfg.getboolean('ldap', key))
                    elif key in ['referrals', 'start_tls', 'timeout']:
                        setattr(self, key, cfg.getint('ldap', key))
+                   elif key == 'debug' and cfg.getboolean('ldap', key):
+                       self.LOG.setLevel(logging.DEBUG)
                    else:
                        setattr(self, key, value)
             else:
                self.LOG.info("Skipping parsing of file ldap_config.ini as it has no 'ldap' section.")
+
 
     def set_values(self, kw):
         for key, value in kw.items():
@@ -389,7 +391,7 @@ with next auth list entry." % (server, str(err)))
             return LOGIN_FAILED
         if not self.verifyPassword(self.client.userid, password):
             msg = _('Invalid password')
-            self.LOG.debug("%s for userid=%s", msg, self.client.userid)
+            self.LOG.warning("%s for userid=%s", msg, self.client.userid)
             self.client.error_message.append(msg)
             return LOGIN_FAILED
 
