@@ -147,14 +147,18 @@
               </div>
             </div>
           </div> <!-- row-fluid -->
+          <tal:comment condition="nothing">
           <!-- submit button replicated here for convenience -->
-          <input type="submit" name="submit_button" value="Submit Changes"/>          
+          <input type="submit" name="submit_button" value="Submit Changes"/>
+          </tal:comment>
         </div> <!-- container-fluid -->
       </fieldset>
 
-      <fieldset>
-        <legend>Extra information</legend>
-        <div class='container-fluid' tal:condition="not:context/is_edit_ok">
+      <fieldset id="fieldset-extrainfo">
+        <legend>
+          <button type="button" class="btn btn-default" data-toggle="collapse"
+        data-target="#item-extrainfo">Extra information <span class="caret"></span></button></legend>
+        <div id="item-extrainfo" class='container-fluid collapse in' tal:condition="not:context/is_edit_ok">
           <div class='row-fluid'>
             <dl class='dl-horizontal span6'>
               <dt i18n:translate="">Status</dt>
@@ -162,7 +166,7 @@
               <tal:block condition="is_operator">
                 <dt i18n:translate="">Dependencies</dt>
                 <dd tal:content="structure context/dependencies/plain"></dd>
-                <dt i18n:translate="">Superseder</dt>
+                <dt i18n:translate="">Link with</dt>
                 <dd tal:content="structure context/superseder/plain"></dd>
               </tal:block>
             </dl>
@@ -178,7 +182,7 @@
             </dl>
           </div>
         </div>
-        <div class='container-fluid' tal:condition="context/is_edit_ok">
+        <div id="item-extrainfo" class='container-fluid collapse in' tal:condition="context/is_edit_ok">
           <div class='row-fluid vspace-two'></div>
           <div class='row-fluid' tal:condition="context/id">
             <!-- Status -->
@@ -213,9 +217,13 @@
             <tal:block condition="is_operator">
               <!-- Dependencies -->
               <div class='control-group span6'>
+              <label class="control-label" data-toggle="tooltip"
+                     data-placement="bottom"
+                     title="A list of issues this issue depends on">
                 <tal:block i18n:translate="">Dependencies</tal:block>:
                 <span tal:condition="context/dependencies/is_edit_ok"
                       tal:replace="structure python:db.issue.classhelp('id,title,status', filter='status=-1,1,2,5', property='dependencies')" />
+                </label>
                 <div class='controls'>
                   <span tal:replace="structure python:context.dependencies.field(showid=1,size=20)" />
                   <span tal:condition="context/dependencies" tal:repeat="d python:context.dependencies.sorted('creation')">
@@ -225,7 +233,7 @@
               </div>
               <!-- Superseder -->
               <div class='control-group span6'>
-                <label class='control-label'>Superseder</label>
+                <label class='control-label'>Link with</label>
                 <!-- FIXME
                 <tal:block i18n:translate="">Superseder</tal:block>:
                 <span tal:condition="context/superseder/is_edit_ok"
@@ -250,20 +258,31 @@
                 <tal:block i18n:translate="">Assigned To</tal:block>
               </label>
               <div class="controls">
-                <select name="assignee">
+                <select name="assignee" tal:condition="is_operator">
                   <option value="-1">- no selection -</option>
                   <tal:block tal:repeat="user db/user/list">
                     <option tal:condition="python:user.hasRole('Operator')"
                             tal:attributes="value user/id;
                                             selected python:user.id == context.assignee"
                             tal:content="string: ${user/username} (${user/realname})"></option>
-                  </tal:block>                  
+                  </tal:block>
                 </select>
+                  <tal:block tal:repeat="user db/user/list" tal:condition="not: context/assignee/is_edit_ok">
+                    <span tal:replace="string:${context/assignee}
+                    (${user/realname})" tal:condition="python:
+                    user.id==context.assignee"/>
+                    </tal:block>
               </div>
             </div>
             <!-- Nosy list -->
             <div class='control-group span6'>
-              <label class='control-label' for='nosy'><tal:block i18n:translate="">Subscribers</tal:block></label>
+              <label class="control-label" data-toggle="tooltip"
+                     data-placement="bottom"
+                     title="A list of usernames that will be notified
+via email every time this issue is updated" for='nosy'>
+                <tal:block i18n:translate="">Subscribers</tal:block>
+              </label>
+
               <div class='controls'>
                 <span tal:condition="context/nosy/is_edit_ok"
                     tal:replace="structure python:db.user.classhelp('username,realname,address', property='nosy')" />
