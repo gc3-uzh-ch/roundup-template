@@ -19,18 +19,20 @@
     <link rel="stylesheet" href="@@file/bootstrap-markdown.js">
     <link rel="stylesheet" href="@@file/markdown.js">
 
+    <script tal:replace="structure request/base_javascript"></script>
     <script src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
-<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
     <script>
       $(document).ready(function(){
-$('.dropdown-toggle').dropdown();
+      $('.dropdown-toggle').dropdown();
+      $('.collapse').collapse()
       });
     </script>
     <metal:x define-slot="more-javascript" />
   </head>
   <body tal:attributes="class request/classname"
        tal:define="kw_create python:request.user.hasPermission('Create', 'keyword');
-                   issue_columns string:id,activity,title,creator,status;
+                   issue_columns string:id,activity,title,creator,status,topics;
                    issue_columns_showall string:id,activity,title,creator,assignee,status,topics;
                    issue_status_notclosed string:-1,1,2,5;
                    is_operator
@@ -126,6 +128,7 @@ $('.dropdown-toggle').dropdown();
           <li>
             <a href="issue?@template=search&status=1" i18n:translate="">Search in open issues</a>
           </li>
+          <tal:comment condition="nothing">
           <li>
             <form method="post" action="#" class="form-inline">
               <input type="submit" class="btn" value="Jump to issue N." i18n:attributes="value"/>
@@ -134,6 +137,7 @@ $('.dropdown-toggle').dropdown();
               <input type="hidden" name="@action" value="show" />
             </form>
           </li>
+          </tal:comment>
           <li>
       
             <div class="btn-group">
