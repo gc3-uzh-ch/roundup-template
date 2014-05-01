@@ -44,7 +44,7 @@
       <!-- <h3 i18n:translate="">Messages</h3> -->
       <tal:block tal:repeat="msg context/messages">
         <div class='row-fluid'>
-          <div class='span1'>
+          <div class='span1' tal:condition="is_operator">
             <a tal:attributes="href string:msg${msg/id}"
               i18n:translate="">msg<tal:x replace="msg/id" i18n:name="id" /></a>
           </div>
@@ -63,7 +63,8 @@
             <pre tal:condition="python:msg.content.is_view_ok()"
                tal:replace="structure python:utils.markdown(msg.content.plain())">content</pre>
           </div>
-          <tal:block tal:condition="msg/files">
+          <tal:block tal:condition="python: [i for i in msg.files if i
+               in context.files]">
             <h5>Attachments</h5>
             <ul>
               <tal:block tal:repeat="file msg/files">
