@@ -9,7 +9,8 @@
       tal:attributes="action request/classname">
       
 <table class="form" tal:define="
-   cols python:request.columns or 'id activity title status assignedto'.split();
+   cols python:request.columns or 'id activity title status assignedto
+   topics'.split();
    sort_on python:request.sort and request.sort[0] or nothing;
    sort_desc python:sort_on and sort_on[0] == '-';
    sort_on python:(sort_on and sort_on[1]) or 'activity';
