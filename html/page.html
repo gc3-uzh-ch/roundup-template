@@ -35,8 +35,7 @@
                    issue_columns string:id,activity,title,creator,status,topics;
                    issue_columns_showall string:id,activity,title,creator,assignee,status,topics;
                    issue_status_notclosed string:-1,1,2,5;
-                   is_operator
-                   python:request.user.hasRole('Operator');">
+                   is_operator python:request.user.hasRole('Operator');">
   <div class="navbar navbar-fixed-top">
     <div class='navbar-inner'>
       <div class='container'>
@@ -112,19 +111,6 @@
           </li>
           <li><a href="issue" i18n:translate="" tal:condition="is_operator">All Issues</a>
           </li>
-          <!-- <li tal:condition="is_operator"> -->
-          <!--   <form method="get" name="itemSynopsis" -->
-          <!--         tal:attributes="action request/classname" -->
-          <!--         tal:define="name string:priority; -->
-          <!--                     db_klass string:topic; -->
-          <!--                     db_content string:name;"> -->
-          <!--     <select> -->
-          <!--     <option tal:repeat="s python:db[db_klass].list()" -->
-		  <!--   		  tal:content="python:s[db_content]" -->
-		  <!--   		  i18n:translate=""></option> -->
-          <!--     </select> -->
-          <!--   </form> -->
-          <!-- </li> -->
           <li>
             <a href="issue?@template=search&status=1" i18n:translate="">Search in open issues</a>
           </li>
