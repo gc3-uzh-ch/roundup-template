@@ -217,9 +217,10 @@
             <tal:block condition="is_operator">
               <!-- Dependencies -->
               <div class='control-group span6'>
-              <label class="control-label" data-toggle="tooltip"
-                     data-placement="bottom"
-                     title="A list of issues this issue depends on">
+              <label class="control-label" data-toggle="popover"
+                     data-placement="right"
+                     data-content="Comma separated list of issue IDs
+                     this issue depends on.">
                 <tal:block i18n:translate="">Dependencies</tal:block>:
                 <span tal:condition="context/dependencies/is_edit_ok"
                       tal:replace="structure python:db.issue.classhelp('id,title,status', filter='status=-1,1,2,5', property='dependencies')" />
@@ -233,7 +234,10 @@
               </div>
               <!-- Superseder -->
               <div class='control-group span6'>
-                <label class='control-label'>Link with</label>
+                <label class='control-label' data-target="popover"
+                       data-placement="bottom"
+                       data-content="Comma separated list of issue IDs
+                       related to the current issue.">Link with</label>
                 <!-- FIXME
                 <tal:block i18n:translate="">Superseder</tal:block>:
                 <span tal:condition="context/superseder/is_edit_ok"
@@ -254,7 +258,10 @@
           <div class='row-fluid'>
             <!-- Assignee -->
             <div class='control-group span6'>
-              <label class='control-label'>
+              <label class='control-label' data-toggle="popover"
+                data-placement="right"
+                data-content="Operator who is responsible to solve the
+                issue.">
                 <tal:block i18n:translate="">Assigned To</tal:block>
               </label>
               <div class="controls">
@@ -276,10 +283,10 @@
             </div>
             <!-- Nosy list -->
             <div class='control-group span6'>
-              <label class="control-label" data-toggle="tooltip"
-                     data-placement="bottom"
-                     title="A list of usernames that will be notified
-via email every time this issue is updated" for='nosy'>
+              <label class="control-label" data-toggle="popover"
+                     data-placement="bottom" data-content="A list of
+                     usernames that will be notified via email every
+                     time this issue is updated." for='nosy'>
                 <tal:block i18n:translate="">Subscribers</tal:block>
               </label>
 

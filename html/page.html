@@ -25,7 +25,8 @@
     <script>
       $(document).ready(function(){
       $('.dropdown-toggle').dropdown();
-      $('.collapse').collapse()
+      $('.collapse').collapse();
+      $('.control-label').popover();
       });
     </script>
     <metal:x define-slot="more-javascript" />
@@ -137,11 +138,10 @@
                             '@columns': issue_columns_showall,
                             '@search_text': '',
                             'status': issue_status_notclosed,
-                            '@dispname': i18n.gettext('Show Unassigned'),
                             '@startwith': 0,
                             })">
                   <tal:block tal:repeat="topic db/topic/list" >
-                    <li><a tal:attributes="href string:${baseurl}&topics=${topic/id}"
+                    <li><a tal:attributes="href string:${baseurl}&topics=${topic/id}&@dispname=Show+issues+on+topic+'${topic/name}'"
                            tal:content="topic/name" /></li>
                   </tal:block>
               </ul>
@@ -231,7 +231,7 @@
           </ul>
          </div>
       </div> <!-- well -->
-      <div class="span8">
+      <div class="span9">
        <h1><span metal:define-slot="body_title">body title</span></h1>
        <p tal:condition="options/error_message | nothing" class="alert alert-error"
           tal:repeat="m options/error_message"
