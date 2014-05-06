@@ -27,7 +27,7 @@ def nosyreaction(db, cl, nodeid, oldvalues):
 
     # If the issue was updated without an update message, `messages`
     # is empty.
-    if not messages:
+    if not messages and oldvalues:
         issue = db.issue.getnode(nodeid)
         try:
             # If assignee(s) have been updated, send the message
