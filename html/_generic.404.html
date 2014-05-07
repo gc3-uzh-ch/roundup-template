@@ -1,9 +1,13 @@
-<html>
-<head>
-<title>Item Not Found</title>
-</head>
+<tal:block metal:use-macro="templates/page/macros/frame">
+  <title><span tal:content="context/_classname" /> not found</title>
+  <title metal:fill-slot="head_title">
+    <span tal:replace="config/TRACKER_NAME" />
+  </title>
+  <tal:block metal:fill-slot="body_title">
+    Item not found
+  </tal:block>
 
-<body>
-There is no <span tal:content="context/_classname" /> with id <span tal:content="context/id"/>
-</body>
-</html>
+<div metal:fill-slot="content">
+     <h3>There is no <span tal:content="context/_classname" /> with id <span tal:content="context/id"/></h3>
+</div>
+</tal:block>
