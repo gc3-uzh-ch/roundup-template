@@ -14,14 +14,14 @@
           context.is_edit_ok())" tal:omit-tag="python:1"
           i18n:translate="">New Issue</span>
     <span tal:condition="python: not context.id and context.is_edit_ok()"
-          tal:omit-tag="python:1" i18n:translate="">New Issue Editing</span>
+          tal:omit-tag="python:1" i18n:translate="">Creating New Issue</span>
     <span tal:condition="python: context.id and not
           context.is_edit_ok()" tal:omit-tag="python:1"
           i18n:translate="">Issue <tal:x replace="context/id"
           i18n:name="id" /></span>
     <span tal:condition="python: context.id and context.is_edit_ok()"
-          tal:omit-tag="python:1" i18n:translate="">Issue
-          <tal:x replace="context/id" i18n:name="id" /> Editing</span>
+          tal:omit-tag="python:1" i18n:translate="">Editing Issue
+          <tal:x replace="context/id" i18n:name="id" /></span>
   </tal:block>
 
 
@@ -39,7 +39,7 @@
   <div tal:condition="context/is_view_ok">
     
     <!-- messages -->
-    <h3>Issue <spal tal:content="context/id" />: <span tal:content="structure context/title/plain" /></h3>
+    <h3 tal:condition="context/id">Issue <spal tal:content="context/id" />: <span tal:content="structure context/title/plain" /></h3>
     <div class='container-fluid' tal:condition="context/messages">
       <!-- <h3 i18n:translate="">Messages</h3> -->
       <tal:block tal:repeat="msg context/messages">
@@ -63,8 +63,8 @@
             <pre tal:condition="python:msg.content.is_view_ok()"
                tal:replace="structure python:utils.markdown(msg.content.plain())">content</pre>
           </div>
-          <tal:block tal:condition="python: [i for i in msg.files if i
-               in context.files]">
+          <tal:block tal:condition="python: [i for i in msg.files if
+               i.id in context.files]">
             <h5>Attachments</h5>
             <ul>
               <tal:block tal:repeat="file msg/files">
@@ -98,7 +98,7 @@
           </dl>
         </div>
         <div class='container-fluid' tal:condition="context/is_edit_ok">
-          <legend>Update the issue</legend>
+          <legend tal:condition="context/id">Update the issue</legend>
           <!-- TITLE -->
           <div class='control-group vspace-two' tal:condition="context/title/is_edit_ok">
             <label class='control-label'  for='issue_title' i18n:translate="">Title</label>
