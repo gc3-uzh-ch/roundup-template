@@ -10,7 +10,7 @@
       
 <table class="form" tal:define="
    cols python:request.columns or 'id activity title status assignedto
-   topics'.split();
+   topics deadline'.split();
    sort_on python:request.sort and request.sort[0] or nothing;
    sort_desc python:sort_on and sort_on[0] == '-';
    sort_on python:(sort_on and sort_on[1]) or 'activity';
@@ -188,6 +188,14 @@
               tal:attributes="selected python:value == '-1'">not selected</option>
     </tal:block>
   </td>
+  <td metal:use-macro="column_input"></td>
+  <td metal:use-macro="sort_input"></td>
+  <td metal:use-macro="group_input"></td>
+</tr>
+
+<tr tal:define="name string:deadline">
+  <th i18n:translate="">Deadline:</th>
+  <td metal:use-macro="search_date"></td>
   <td metal:use-macro="column_input"></td>
   <td metal:use-macro="sort_input"></td>
   <td metal:use-macro="group_input"></td>

@@ -33,8 +33,8 @@
   </head>
   <body tal:attributes="class request/classname"
        tal:define="kw_create python:request.user.hasPermission('Create', 'keyword');
-                   issue_columns string:id,activity,title,creator,status,topics;
-                   issue_columns_showall string:id,activity,title,creator,assignee,status,topics;
+                   issue_columns string:id,activity,title,creator,status,topics,deadline;
+                   issue_columns_showall string:id,activity,title,creator,assignee,status,deadline,topics;
                    issue_status_notclosed string:-1,1,2,5;
                    is_operator python:request.user.hasRole('Operator');">
   <div class="navbar navbar-fixed-top">

@@ -30,6 +30,7 @@
    <th tal:condition="request/show/title" i18n:translate="">Title</th>
    <th tal:condition="request/show/topics"  i18n:translate="">Topics</th>
    <th tal:condition="request/show/status"    i18n:translate="">Status</th>
+   <th tal:condition="request/show/deadline"    i18n:translate="">Deadline</th>
    <th tal:condition="request/show/creator" i18n:translate="">Creator</th>
    <th tal:condition="request/show/assignee" i18n:translate="">Assigned&nbsp;To</th>
   </tr>
@@ -57,6 +58,8 @@
        tal:content="python:i.topics.plain() or default">&nbsp;</td>
    <td tal:condition="request/show/status"
        tal:content="python:i.status.plain() or default">&nbsp;</td>
+   <td tal:condition="request/show/deadline"
+       tal:content="python:i.deadline.pretty('%Y-%m-%d') or default">&nbsp;</td>
    <td tal:condition="request/show/creator"
        tal:content="python:i.creator.plain() or default">&nbsp;</td>
    <td tal:condition="request/show/assignee"

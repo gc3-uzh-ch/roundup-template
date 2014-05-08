@@ -92,13 +92,15 @@ file = FileClass(db, "file",
 #   nosy = Multilink("user")
 #   superseder = Multilink("issue")
 issue = IssueClass(db, "issue",
-                 topics=Multilink('topic'),
-                 priority=Link('priority'),
-                 dependencies=Multilink('issue'),
-                 assignee=Link('user'),
-                 status=Link('status'),
-                 superseder=Link('issue'),
-                 keywords=Multilink('keyword'))
+                   topics=Multilink('topic'),
+                   priority=Link('priority'),
+                   dependencies=Multilink('issue'),
+                   assignee=Link('user'),
+                   status=Link('status'),
+                   superseder=Link('issue'),
+                   keywords=Multilink('keyword'),
+                   deadline=Date(),
+)
 
 
 #
@@ -143,7 +145,7 @@ db.security.addPermissionToRole('User', p)
 
 p = db.security.addPermission(name='Create', klass='issue',
                               properties=('title',
-                                          'topics',
+                                          'topics', 'status', 'priority',
                                           'messages', 'files', 'nosy'),
                               description='User can report and discuss issues')
 db.security.addPermissionToRole('User', p)

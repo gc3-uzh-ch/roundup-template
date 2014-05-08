@@ -26,7 +26,7 @@
 
 
 <div metal:fill-slot="content"
-    tal:define="is_operator python:request.user.hasRole('Operator')" >
+    tal:define="is_operator python:request.user.hasRole('Operator');" >
 
   <p tal:condition="python:not (context.is_view_ok()
    or request.user.hasRole('Anonymous'))" i18n:translate="" class='alert alert-error'>
@@ -311,6 +311,19 @@
                     tal:replace="structure python:db.user.classhelp('username,realname,address', property='nosy')" />
                 <span tal:replace="structure context/nosy/field" />
               </div>
+            </div>
+          </div> <!-- row-fluid -->
+
+
+          <div class='row-fluid' tal:condition="is_operator">
+            <!-- Deadline -->
+            <div class='control-group span6'>
+              <label class='control-label' data-toggle="popover"
+                data-placement="right"
+                data-content="When this issue *must* be solved.">
+                <tal:block i18n:translate="">Deadline</tal:block>
+              </label>
+              <div class="controls" tal:content="structure python:context.deadline.field(format='%Y-%m-%d')" />
             </div>
           </div> <!-- row-fluid -->
 
