@@ -37,10 +37,16 @@ status = Class(db, "status",
 status.setkey("name")
 
 # Keyword
-keyword = Class(db, "keyword",
+# keyword = Class(db, "keyword",
+#                 name=String(),
+#                 description=String())
+# keyword.setkey("name")
+
+# Projects
+project = Class(db, "project",
                 name=String(),
                 description=String())
-keyword.setkey("name")
+project.setkey("name")
                 
 
 # User-defined saved searches
@@ -98,9 +104,10 @@ issue = IssueClass(db, "issue",
                    assignee=Link('user'),
                    status=Link('status'),
                    superseder=Link('issue'),
-                   keywords=Multilink('keyword'),
+                   # keywords=Multilink('keyword'),
                    projects=Multilink('project'),
                    deadline=Date(),
+                   public=Boolean(default_value=False),
 )
 
 
@@ -124,21 +131,66 @@ for r in 'User', 'Operator':
 # User permissions
 ##########################
 
+def public_or_owned_issue(db, userid, itemid):
+    item = db.issue.getnode(itemid)
+    return item.public or item.creator == userid or userid in item.nosy
+
+p = db.security.addPermission(name='View', klass='issue', check=public_or_owned_issue,
+    description="User is allowed to view its own issues, or public issues only.")
+db.security.addPermissionToRole('User', p)
+
+
+def public_or_owned_msg_file(klass):
+    attribute = {'msg': 'messages',
+                 'file': 'files'}.get(klass)
+    def belongs_to_public_issue(db, userid, itemid):
+        issueids = db.issue.find(**{attribute:str(itemid)})
+        if not issueids: return None
+
+        issue=db.issue.getnode(issueids[0])
+        return issue.public or issue.creator == userid or userid in issue.nosy
+    return belongs_to_public_issue
+
+for klass in ['msg', 'file']:
+    p = db.security.addPermission(name='View', klass=klass, check=public_or_owned_msg_file(klass),
+        description="User is allowed messages and files of public issues or issues owned by him.")
+    db.security.addPermissionToRole('User', p)
+
+
 for cl in ('topic',
-           'priority', 'status', 'issue', 
-           'keyword', 'file', 'msg'):
+           'priority', 'status',
+           # 'keyword',
+):
     db.security.addPermissionToRole('User', 'View', cl)
 
 for cl in ('topic',
            'priority', 'status',
            'issue', 'file', 'msg'):
     db.security.addPermissionToRole('User', 'Create', cl)
-    
 
 def checker(klass):
-    def check(db, userid, itemid, klass=klass):
+    attributes = {'msg': 'messages',
+                  'file': 'files',}
+
+    def creator_or_public_issue(db, userid, itemid):
+        item = db.issue.getnode(itemid)
+        return item.public or item.creator == userid or userid in item.nosy
+
+    def check_creator(db, userid, itemid, klass=klass):
         return db.getclass(klass).get(itemid, 'creator') == userid
-    return check
+
+    if klass in attributes:
+        attribute = attributes[klass]
+        def belongs_to_public_issue(db, userid, itemid):
+            issueids = db.issue.find(**{attribute:str(itemid)})
+            if not issueids: return None
+
+            issue=db.issue.getnode(issueids[0])
+            return issue.public or issue.creator == userid
+
+        return check_creator
+    else:
+        return creator_or_public_issue
 
 p = db.security.addPermission(name='Edit', klass='file', check=checker('file'),
     description="User is allowed to remove their own files")
@@ -209,16 +261,19 @@ def view_query(db, userid, itemid):
     return userid == private_for
 def edit_query(db, userid, itemid):
     return userid == db.query.get(itemid, 'creator')
+
 p = db.security.addPermission(name='View', klass='query', check=view_query,
     description="User is allowed to view their own and public queries")
+db.security.addPermissionToRole('User', p)
+
 p = db.security.addPermission(name='Search', klass='query')
 db.security.addPermissionToRole('User', p)
-for r in 'User', 'Operator':
-    db.security.addPermissionToRole(r, p)
+
 p = db.security.addPermission(name='Edit', klass='query', check=edit_query,
     description="User is allowed to edit their queries")
 for r in 'User', 'Operator':
     db.security.addPermissionToRole(r, p)
+
 p = db.security.addPermission(name='Create', klass='query',
     description="User is allowed to create queries")
 for r in 'User', 'Operator':

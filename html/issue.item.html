@@ -337,6 +337,18 @@
             </div>
           </div> <!-- row-fluid -->
 
+          <div class="row-fluid" tal:condition="is_operator">
+            <div class="control-group span6">
+              <label class="control-label" data-toggle="popover"
+                     data-placement="bottom"
+                     data-content="Select one or mor projects this
+                     issue belong to">
+                Projects
+              </label>
+              <div class="controls" tal:content="structure
+              context/projects/menu">projects field</div>
+            </div>
+          </div>
             <!-- Keywords -->
             <!-- <div class='control-group span6'> -->
             <!--   <label class='control-label' i18n:translate="">Keywords:</label> -->
