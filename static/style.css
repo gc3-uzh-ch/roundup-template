@@ -27,3 +27,5 @@ h1 {
 
 /* Fix collapsible boxes */
 .collapse { margin-right: -1em; }
+
+.rblabel {margin-right: 1em;}
