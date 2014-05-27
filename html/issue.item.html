@@ -63,6 +63,7 @@
             <pre tal:condition="python:msg.content.is_view_ok()"
                tal:replace="structure python:utils.markdown(msg.content.plain())">content</pre>
           </div>
+
           <tal:block tal:condition="python: [i for i in msg.files if
                i.id in context.files]">
             <h5>Attachments</h5>
