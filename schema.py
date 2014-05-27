@@ -99,6 +99,7 @@ issue = IssueClass(db, "issue",
                    status=Link('status'),
                    superseder=Link('issue'),
                    keywords=Multilink('keyword'),
+                   projects=Multilink('project'),
                    deadline=Date(),
 )
 
@@ -166,7 +167,7 @@ db.security.addPermissionToRole('User', p)
 ##########################
 # Operator permissions
 ##########################
-for cl in ('topic', 'priority', 'status', 'issue', 'file', 'msg'):
+for cl in ('topic', 'priority', 'status', 'issue', 'file', 'msg', 'project'):
     db.security.addPermissionToRole('Operator', 'View', cl)
     db.security.addPermissionToRole('Operator', 'Edit', cl)
     db.security.addPermissionToRole('Operator', 'Create', cl)

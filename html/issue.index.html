@@ -29,6 +29,7 @@
    <th tal:condition="request/show/actor" i18n:translate="">Actor</th>
    <th tal:condition="request/show/title" i18n:translate="">Title</th>
    <th tal:condition="request/show/topics"  i18n:translate="">Topics</th>
+   <th tal:condition="python:is_operator and request.show['projects']"  i18n:translate="">Projects</th>
    <th tal:condition="request/show/status"    i18n:translate="">Status</th>
    <th tal:condition="request/show/deadline"    i18n:translate="">Deadline</th>
    <th tal:condition="request/show/creator" i18n:translate="">Creator</th>
@@ -56,6 +57,8 @@
    </td>
    <td tal:condition="request/show/topics"
        tal:content="python:i.topics.plain() or default">&nbsp;</td>
+   <td tal:condition="python:is_operator and request.show['projects']"
+       tal:content="python:i.projects.plain() or default">&nbsp;</td>
    <td tal:condition="request/show/status"
        tal:content="python:i.status.plain() or default">&nbsp;</td>
    <td tal:condition="request/show/deadline"

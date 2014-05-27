@@ -326,6 +326,15 @@
               </label>
               <div class="controls" tal:content="structure python:context.deadline.field(format='%Y-%m-%d')" />
             </div>
+
+            <div class="control-group span6">
+              <label class='control-label' data-toggle="popover"
+                data-placement="right"
+                data-content="Is this issue public?.">
+                <tal:block i18n:translate="">Public</tal:block>
+              </label>
+              <div class="controls form-inline" tal:content="structure context/public/field" />
+            </div>
           </div> <!-- row-fluid -->
 
             <!-- Keywords -->

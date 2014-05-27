@@ -9,8 +9,7 @@
       tal:attributes="action request/classname">
       
 <table class="form" tal:define="
-   cols python:request.columns or 'id activity title status assignedto
-   topics deadline'.split();
+   cols python:request.columns or 'id activity title status assignedto topics deadline'.split();
    sort_on python:request.sort and request.sort[0] or nothing;
    sort_desc python:sort_on and sort_on[0] == '-';
    sort_on python:(sort_on and sort_on[1]) or 'activity';
@@ -113,6 +112,20 @@
                 db_klass string:topic;
                 db_content string:name;">
   <th i18n:translate="">Topics:</th>
+  <td metal:use-macro="search_select_translated">
+    <option metal:fill-slot="extra_options" value="-1" i18n:translate=""
+            tal:attributes="selected python:value == '-1'">not selected</option>
+  </td>
+  <td metal:use-macro="column_input"></td>
+  <td metal:use-macro="sort_input"></td>
+  <td metal:use-macro="group_input"></td>
+</tr>
+
+<tr tal:define="name string:projects;
+                db_klass string:project;
+                db_content string:name;"
+    tal:condition="is_operator">
+  <th i18n:translate="">Projects:</th>
   <td metal:use-macro="search_select_translated">
     <option metal:fill-slot="extra_options" value="-1" i18n:translate=""
             tal:attributes="selected python:value == '-1'">not selected</option>
