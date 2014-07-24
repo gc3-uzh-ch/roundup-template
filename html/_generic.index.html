@@ -17,7 +17,7 @@
 <span tal:condition="python:not (context.is_view_ok() or context.is_edit_ok())
  and request.user.hasRole('Anonymous')"
  tal:omit-tag="python:1" i18n:translate=""
->Please login with your username and password.</span>
+>Please login with your <a href="http://www.id.uzh.ch/dl/admin/itim/shortname.html">UZH shortname</a> and "webpass".</span>
 
 <tal:block tal:condition="context/is_edit_ok">
 <tal:block i18n:translate="">

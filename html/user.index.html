@@ -11,7 +11,7 @@
 
 <span tal:condition="python:not context.is_view_ok()
  and request.user.hasRole('Anonymous')"
- i18n:translate="">Please login with your username and password.</span>
+ i18n:translate="">Please login with your <a href="http://www.id.uzh.ch/dl/admin/itim/shortname.html">UZH shortname</a> and "webpass".</span>
 
 <div class='span8 offset2'>
   <form tal:condition="context/is_view_ok" method="get" name="itemSynopsis"

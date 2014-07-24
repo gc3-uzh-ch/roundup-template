@@ -36,7 +36,7 @@ define="edit_ok context/is_edit_ok"
 
 <p tal:condition="python:not context.is_view_ok()
  and request.user.hasRole('Anonymous')" i18n:translate="">
- Please login with your username and password.</p>
+ Please login with your <a href="http://www.id.uzh.ch/dl/admin/itim/shortname.html">UZH shortname</a> and "webpass".</p>
 
 <div tal:condition="context/is_view_ok">
 
