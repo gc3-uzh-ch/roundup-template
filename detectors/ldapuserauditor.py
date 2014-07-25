@@ -48,13 +48,15 @@ def ldapuserauditor(db, cl, nodeid, newvalues):
     ldap_conf_file = os.path.join(db.config.ext['HOME'], 'ldap_config.ini')
     if not os.path.exists(ldap_conf_file):
         log.info("Ldap configuration file %s not found. Exiting", ldap_conf_file)
-        raise Reject('Ldap not configured')
+        return
+        # raise Reject('Ldap not configured')
 
     cfg = RawConfigParser()
     cfg.read(ldap_conf_file)
     if not cfg.has_section('ldap'):
         log.info("No section 'ldap' in configuration file %s. Exiting", ldap_conf_file)
-        raise Reject('Ldap not configured')
+        return
+        # raise Reject('Ldap not configured')
 
     for opt in ['server_uri', 'search_bind_dn', 'search_bind_pw', 'base_dn',
                 'aliasname_attribute', 'surname_attribute',
@@ -62,7 +64,8 @@ def ldapuserauditor(db, cl, nodeid, newvalues):
         if not cfg.has_option('ldap', opt):
             log.info("Missing mandatory option `%s` in ldap configuration file %s",
                      opt, ldap_conf_file)
-            raise Reject('Missing mandatory option %s in ldap configuration file' % opt)
+            return
+            # raise Reject('Missing mandatory option %s in ldap configuration file' % opt)
 
     server_uri = cfg.get('ldap', 'server_uri')
     search_bind_dn = cfg.get('ldap', 'search_bind_dn')
@@ -85,10 +88,10 @@ def ldapuserauditor(db, cl, nodeid, newvalues):
     log.debug("Searching user with search filter '%s'", searchfilter)
     users = l.search_st(base_dn, ldap.SCOPE_SUBTREE, searchfilter)
     if not users:
-        # Raise an exception
         log.error("User with email address %s not found in database",
                   newvalues['address'])
-        raise Reject('User not found in LDAP database')
+        return
+        # raise Reject('User not found in LDAP database')
     
     user = users[0][1]
     newvalues['username'] = user['uid'][0]

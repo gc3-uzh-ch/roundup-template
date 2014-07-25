@@ -297,9 +297,9 @@ db.security.addPermissionToRole('Anonymous', 'Email Access')
 
 # Assign the appropriate permissions to the anonymous user's Anonymous
 # Role. Choices here are:
-# - Allow anonymous users to register
 db.security.addPermission(name='Register', klass='user')
 db.security.addPermissionToRole('Anonymous', 'Register', 'user')
+# - Allow anonymous users to register
 # db.security.addPermissionToRole('Anonymous', 'Create', 'user')
 
 # Allow anonymous users access to view issues (and the related, linked
