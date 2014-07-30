@@ -1,3 +1,5 @@
+# Set status to `new` if no status is set.
+# Fixes issue 235: https://www.s3it.uzh.ch/help/issue235
 def preset_new(db, cl, nodeid, newvalues):
     """ Make sure the status is set on new bugs"""
 
@@ -8,7 +10,7 @@ def preset_new(db, cl, nodeid, newvalues):
     newvalues['status'] = new
 
 
-def init(db): pass
+def init(db):
     # fire before changes are made
-    #db.bug.audit('create', preset_new)
-#SHA: b59c357b6d48955a5e11c2b27984a0cad4d2e79e
+    db.issue.audit('create', preset_new)
+
