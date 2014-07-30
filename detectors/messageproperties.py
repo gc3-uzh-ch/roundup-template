@@ -110,6 +110,22 @@ def properties_updater(db, cl, nodeid, newvalues):
             log.debug("Setting property %s to %s.", propname, propvalue)
             issue[propname] = propvalue
             
+    # This is useful only to update old tickets!
+    # Relates to issue 235: https://www.s3it.uzh.ch/help/issue235
+    if not issue.status and not newvalues.get('status', False):
+        try:
+            issue['status'] = db.status.lookup('new')
+        except KeyError:
+            log.error("No status `new` available. Can't set default status.")
+
+    # This is useful only to update old tickets!
+    # Relates to issue 233: https://www.s3it.uzh.ch/help/issue233
+    if not issue.priority and not newvalues.get('priority', False):
+        try:
+            issue['priority'] = db.priority.lookup('normal')
+        except KeyError:
+            log.error("No priority `normal` available. Can't set default priority.")
+
     newcontent = str.join('\n', contentlines).strip()
 
     if newcontent != msg.content:
