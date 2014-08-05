@@ -131,8 +131,7 @@ def properties_updater(db, cl, nodeid, newvalues):
     if newcontent != msg.content:
         log.debug("Removing 'command' lines from content.")
         newvalues['content'] = newcontent
-        msg.content = newcontent
-        msg.summary = msg.content.split('\n')[0]
+        newvalues['summary'] = msg.content.split('\n')[0]
 
 def init(db):
     # fire before changes are made
