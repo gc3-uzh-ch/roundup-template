@@ -39,7 +39,17 @@
   <div tal:condition="context/is_view_ok">
     
     <!-- messages -->
-    <h3 tal:condition="context/id">Issue <spal tal:content="context/id" />: <span tal:content="structure context/title/plain" /></h3>
+    <h3 tal:condition="context/id">Issue
+    <span tal:content="context/id" />: <span tal:content="structure
+    context/title/plain" /></h3>
+    <h4 tal:define="status context/status/plain;
+                    status_class python:'alert-success' if status=='solved' else 'alert'"
+        tal:attributes="class string:alert ${status_class}">
+      <span tal:omit-tag="true" i18n:translate="">Status:</span>
+      <span tal:condition="status" tal:replace="status" />
+      <span tal:condition="not: status" tal:omit-tag="true">unset</span>
+    </h4>
+
     <div class='container-fluid' tal:condition="context/messages">
       <!-- <h3 i18n:translate="">Messages</h3> -->
       <tal:block tal:repeat="msg context/messages">
