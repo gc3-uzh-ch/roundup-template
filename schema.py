@@ -274,6 +274,11 @@ p = db.security.addPermission(name='Edit', klass='query', check=edit_query,
 for r in 'User', 'Operator':
     db.security.addPermissionToRole(r, p)
 
+p = db.security.addPermission(name='Retire', klass='query', check=edit_query,
+    description="User is allowed to retire their queries")
+for r in 'User', 'Operator':
+    db.security.addPermissionToRole(r, p)
+
 p = db.security.addPermission(name='Create', klass='query',
     description="User is allowed to create queries")
 for r in 'User', 'Operator':

@@ -13,9 +13,19 @@
 <script language="javascript">
 // This exists solely because I can't figure how to get the & into an
 // attributes TALES expression, and so it keeps getting quoted.
-function retire(qid) {
-    window.location = 'query'+qid+'?@action=retire&@template=edit';
+//function retire(qid) {
+//    window.location = 'query'+qid+'?@action=retire&@template=edit';
+
+function retire(qid){
+    var form = $("<form method='POST' action='query"+qid+"'?@template=edit'>");
+    form.append("<input type='hidden' name='@action' value='retire' />");
+    $("body").append(form);
+
+    form.submit();
 }
+
+
+//}
 </script>
 
 <form method="POST" onSubmit="return submit_once()" action="query"
