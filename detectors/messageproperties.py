@@ -73,7 +73,6 @@ def properties_updater(db, cl, nodeid, newvalues):
         propname = match.group('prop').lower()
         propclass = db.issue.properties[propname]
         
-        log.debug("Property '%s' is a %s.", propname, propclass.classname)
         if isinstance(propclass, roundup.hyperdb.Multilink):
             propdb = db.getclass(propclass.classname)
             # If at least one property name starts with +, all properties will be
