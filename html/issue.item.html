@@ -43,8 +43,9 @@
     <span tal:content="context/id" />: <span tal:content="structure
     context/title/plain" /></h3>
     <h4 tal:define="status context/status/plain;
-                    status_class python:'alert-success' if status=='solved' else 'alert'"
-        tal:attributes="class string:alert ${status_class}">
+                    status_success python:'alert-success' if status=='solved' else '';
+                    status_error python:'alert-error' if status in ['invalid', 'wontfix'] else ''"
+        tal:attributes="class string:alert ${status_success} ${status_error}">
       <span tal:omit-tag="true" i18n:translate="">Status:</span>
       <span tal:condition="status" tal:replace="status" />
       <span tal:condition="not: status" tal:omit-tag="true">unset</span>
