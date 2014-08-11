@@ -4,7 +4,7 @@ from roundup.mailgw import parseContent
 import roundup.hyperdb
 
 
-def properties_updater(db, cl, nodeid, newvalues):
+def properties_updater(db, cl, nodeid, oldvalues):
     """This function scans the content of an email for special fields to
     be used to update the properties of an issue.
 
@@ -47,7 +47,6 @@ def properties_updater(db, cl, nodeid, newvalues):
         return
 
     log = db.get_logger().getChild('messageproperties')
-
     msg = db.msg.getnode(nodeid)
     issues = db.issue.find(messages=nodeid)
     if not issues:
@@ -104,6 +103,31 @@ def properties_updater(db, cl, nodeid, newvalues):
             if propvalue:
                 log.debug("Setting property %s to %s.", propname, propvalue[0])
                 issue[propname] = propvalue[0]
+        elif isinstance(propclass, roundup.hyperdb.Date):
+            # Date is a special case
+            try:
+                propvalue = propclass.from_raw(match.group('value'), db)
+                if propvalue:
+                    log.debug("Setting property %s to %s.", propname, propvalue)
+                    issue[propname] = propvalue
+            except KeyError:
+                # An invalid date raises a KeyError value. Don't ask me why...
+                # >>> from roundup.hyperdb import Date
+                # >>> Date().from_raw('01/02/2014', db)
+                # Traceback (most recent call last):
+                #   File "<stdin>", line 1, in <module>
+                #   File "/usr/local/roundup-env/local/lib/python2.7/site-packages/roundup/hyperdb.py", line 103, in from_raw
+                #     'date (%s)')%(kw['propname'], value, message)
+                # KeyError: 'propname'
+                # >>> Date().from_raw('asd', db)
+                # Traceback (most recent call last):
+                #   File "<stdin>", line 1, in <module>
+                #   File "/usr/local/roundup-env/local/lib/python2.7/site-packages/roundup/hyperdb.py", line 103, in from_raw
+                #     'date (%s)')%(kw['propname'], value, message)
+                # KeyError: 'propname'
+                # >>> Date().from_raw('2014-01-02', db)
+                # <Date 2014-01-02.00:00:00.000>
+                log.error("Invalid date format '%s'. Should be in yyyy[-mm[-dd]], mm-dd, hh:mm:ss or [\dsmywd]+" % match.group('value'))
         else:
             propvalue = propclass.from_raw(match.group('value'))
             log.debug("Setting property %s to %s.", propname, propvalue)
@@ -111,7 +135,7 @@ def properties_updater(db, cl, nodeid, newvalues):
             
     # This is useful only to update old tickets!
     # Relates to issue 235: https://www.s3it.uzh.ch/help/issue235
-    if not issue.status and not newvalues.get('status', False):
+    if not issue.status and not oldvalues.get('status', False):
         try:
             issue['status'] = db.status.lookup('new')
         except KeyError:
@@ -119,7 +143,7 @@ def properties_updater(db, cl, nodeid, newvalues):
 
     # This is useful only to update old tickets!
     # Relates to issue 233: https://www.s3it.uzh.ch/help/issue233
-    if not issue.priority and not newvalues.get('priority', False):
+    if not issue.priority and not oldvalues.get('priority', False):
         try:
             issue['priority'] = db.priority.lookup('normal')
         except KeyError:
@@ -129,8 +153,10 @@ def properties_updater(db, cl, nodeid, newvalues):
 
     if newcontent != msg.content:
         log.debug("Removing 'command' lines from content.")
-        newvalues['content'] = newcontent
-        newvalues['summary'] = msg.content.split('\n')[0]
+        log.debug("New content: %s", newcontent)
+        # This can cause a loop!
+        msg.content = newcontent
+        msg.summary = msg.content.split('\n')[0]
 
 def init(db):
     # fire before changes are made
