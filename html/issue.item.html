@@ -42,13 +42,13 @@
     <h3 tal:condition="context/id">Issue
     <span tal:content="context/id" />: <span tal:content="structure
     context/title/plain" /></h3>
-    <h4 tal:define="status context/status/plain;
+    <h4 tal:condition="context/id|nothing"
+        tal:define="status context/status/plain;
                     status_success python:'alert-success' if status=='solved' else '';
                     status_error python:'alert-error' if status in ['invalid', 'wontfix'] else ''"
         tal:attributes="class string:alert ${status_success} ${status_error}">
       <span tal:omit-tag="true" i18n:translate="">Status:</span>
-      <span tal:condition="status" tal:replace="status" />
-      <span tal:condition="not: status" tal:omit-tag="true">unset</span>
+      <span tal:replace="status" />
     </h4>
 
     <div class='container-fluid' tal:condition="context/messages">
