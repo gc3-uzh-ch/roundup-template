@@ -114,7 +114,7 @@
           <li><a href="issue" i18n:translate="" tal:condition="is_operator">All Issues</a>
           </li>
           <li>
-            <a href="issue?@template=search&status=1" i18n:translate="">Search in open issues</a>
+            <a href="" tal:attributes="href string:issue?@template=search&status=${issue_status_notclosed}" i18n:translate="">Search in open issues</a>
           </li>
           <tal:comment condition="nothing">
           <li>
