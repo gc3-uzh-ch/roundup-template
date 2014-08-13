@@ -335,7 +335,9 @@
                 data-content="When this issue *must* be solved.">
                 <tal:block i18n:translate="">Deadline</tal:block>
               </label>
-              <div class="controls" tal:content="structure python:context.deadline.field(format='%Y-%m-%d')" />
+              <div class="controls datepicker" tal:content="structure
+              python:context.deadline.field(format='%Y-%m-%d',
+              popcal=False)" />             
             </div>
 
             <div class="control-group span6">

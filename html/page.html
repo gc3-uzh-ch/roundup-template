@@ -22,12 +22,18 @@
 
     <script tal:replace="structure request/base_javascript"></script>
     <script src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet"
+       href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css">
     <script>
       $(document).ready(function(){
       $('.dropdown-toggle').dropdown();
       $('.collapse').collapse();
       $('.control-label').popover();
+      });
+      $(function() {
+      $( ".datepicker input" ).datepicker({ dateFormat: 'yy-mm-dd'});
       });
     </script>
     <metal:x define-slot="more-javascript" />
