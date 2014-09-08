@@ -37,10 +37,10 @@ status = Class(db, "status",
 status.setkey("name")
 
 # Keyword
-# keyword = Class(db, "keyword",
-#                 name=String(),
-#                 description=String())
-# keyword.setkey("name")
+keyword = Class(db, "keyword",
+                name=String(),
+                description=String())
+keyword.setkey("name")
 
 # Projects
 project = Class(db, "project",
@@ -83,7 +83,8 @@ msg = FileClass(db, "msg",
                 summary=String(),
                 files=Multilink("file"),
                 messageid=String(),
-                inreplyto=String())
+                inreplyto=String(),
+ )
 
 # File
 file = FileClass(db, "file",
@@ -104,10 +105,11 @@ issue = IssueClass(db, "issue",
                    assignee=Link('user'),
                    status=Link('status'),
                    superseder=Link('issue'),
-                   # keywords=Multilink('keyword'),
+                   keywords=Multilink('keyword'),
                    projects=Multilink('project'),
                    deadline=Date(),
                    public=Boolean(default_value=False),
+                   extra_keywords=String(),
 )
 
 
@@ -159,7 +161,7 @@ for klass in ['msg', 'file']:
 
 for cl in ('topic',
            'priority', 'status',
-           # 'keyword',
+           'keyword',
 ):
     db.security.addPermissionToRole('User', 'View', cl)
 
