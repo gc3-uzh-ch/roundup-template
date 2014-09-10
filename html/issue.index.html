@@ -59,8 +59,11 @@
        tal:content="python:i.topics.plain() or default">&nbsp;</td>
    <td tal:condition="python:is_operator and request.show['projects']"
        tal:content="python:i.projects.plain() or default">&nbsp;</td>
-   <td tal:condition="request/show/status"
-       tal:content="python:i.status.plain() or default">&nbsp;</td>
+   <td tal:condition="request/show/status">
+     <span tal:define="status_class python:'status-'+i.status.plain().replace(' ','-');"
+            tal:attributes="class string:statusinline ${status_class}"
+            tal:content="i/status/plain" />&nbsp;
+   </td>
    <td tal:condition="request/show/deadline"
        tal:content="python:i.deadline.pretty('%Y-%m-%d') or default">&nbsp;</td>
    <td tal:condition="request/show/creator"
@@ -160,3 +163,4 @@
 </tal:block>
 </tal:block>
 </tal:block>
+<!-- SHA: 29c546e44999ee97a1781c317382051023817342 -->

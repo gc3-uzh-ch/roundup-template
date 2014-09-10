@@ -39,17 +39,13 @@
   <div tal:condition="context/is_view_ok">
     
     <!-- messages -->
-    <h3 tal:condition="context/id">Issue
-    <span tal:content="context/id" />: <span tal:content="structure
+    <h3 tal:condition="context/id">
+      <span tal:define="status_class python:'status-'+context.status.plain().replace(' ','-');"
+            tal:attributes="class string:statusblock ${status_class}"
+            tal:content="context/status/plain" />
+      Issue<span tal:content="context/id" />: <span tal:content="structure
     context/title/plain" /></h3>
-    <h4 tal:condition="context/id|nothing"
-        tal:define="status context/status/plain;
-                    status_success python:'alert-success' if status=='solved' else '';
-                    status_error python:'alert-error' if status in ['invalid', 'wontfix'] else ''"
-        tal:attributes="class string:alert ${status_success} ${status_error}">
-      <span tal:omit-tag="true" i18n:translate="">Status:</span>
-      <span tal:replace="status" />
-    </h4>
+
 
     <div class='container-fluid' tal:condition="context/messages">
       <!-- <h3 i18n:translate="">Messages</h3> -->
@@ -378,7 +374,7 @@
                      data-placement="top"
                      data-content="A comma-separated list of keywords
                      you want to add, both to this issue *and* to
-                     the list of available keywords.">Create new keywords:</label>
+                     the list of available keywords.">Additional keywords:</label>
               <div class="controls" tal:content="structure context/extra_keywords/field">projects field</div>
             </div>
 
@@ -444,3 +440,4 @@
 </div> <!-- content -->
 
 </tal:block>
+<!-- SHA: 2062c26eea817319014e013855d4574840cd784c -->
