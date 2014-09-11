@@ -5,8 +5,8 @@
  whatever. It's a good idea to have the issues on the front page though
 -->
 <span tal:replace="structure python:db.issue.renderWith('index',
-    sort=[('-', 'activity')], filter=['status'],
-    columns=['activity','title','creator', 'topics'],
+    sort=[('-', 'activity')], filter=['status'], group=[('+', 'priority')],
+    columns=['activity','title','creator', 'topics', 'status'],
     filterspec={'status':['-1', '1', '2', '4', '5']})"
       tal:condition="python: request.user.hasRole('Operator')" />
 
