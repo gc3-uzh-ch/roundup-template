@@ -9,7 +9,8 @@
 #   creator = Link('user')
 #   actor = Link('user')
 
-
+# regexp used by S3ITIssueClass
+import re
 
 
 # Topic
@@ -98,7 +99,73 @@ file = FileClass(db, "file",
 #   files = Multilink("file")
 #   nosy = Multilink("user")
 #   superseder = Multilink("issue")
-issue = IssueClass(db, "issue",
+
+class S3ITIssueClass(IssueClass):
+    """This class overrides `generateChangeNote` and `generateCreateNote`.
+
+    It is way too hackish, but it's a quick and dirty solution to use
+    the real name of the users in the assignee and nosy fields, in the email we send.
+
+    Basically, we call the methods of the parent, and we *parse the
+    output*, replacing `username` with `realname (username)`
+    """
+
+    # Override generateChangeNote, to address S3IT issue384
+    def __fix_usernames_in_change_note(self, text):
+        lines = text.splitlines()
+        newlines = []
+        assignee_change_re = re.compile('assignee:\s+(?P<old>[^\s]+)\s+->\s+(?P<new>[^\s]+)')
+        assignee_create_re = re.compile('assignee:\s+(?P<old>[^\s]+)\s+')
+        nosy_re = re.compile('nosy:\s+(.*)')
+        for line in lines:
+            if assignee_change_re.match(line):
+                # Matches change in assignee
+                old, new = assignee_change_re.search(line).groups()
+                try:
+                    oldname = db.user.get(db.user.lookup(old), 'realname', old)
+                    newname = db.user.get(db.user.lookup(new), 'realname', new)
+                    newlines.append('assignee: {} ({}) -> {} ({})'.format(
+                        oldname, old, newname, new))
+                except KeyError:
+                    newlines.append(line)
+            elif assignee_create_re.match(line):
+                # Matches new assignee
+                assignee = assignee_change_re.search(line).group(1)
+                try:
+                    realname = db.user.get(db.user.lookup(assignee), 'realname', assignee)
+                    newlines.append('assignee: {} ({})'.format(
+                        assignee, realname))
+                except KeyError:
+                    newlines.append(line)
+            elif nosy_re.match(line):
+                # Matches changes in the nosy list
+                nosy = [i.strip() for i in nosy_re.search(line).group(1).split(',')]
+                newnosy = []
+                for user in nosy:
+                    username = user.strip('-+')
+                    prefix = user[0] if user[0] in '-+' else ''
+                    try:
+                        userid = db.user.lookup(username)
+                        realname = db.user.get(userid, 'realname', username)
+                        newnosy.append('{}{} ({})'.format(prefix, realname, username))
+                    except KeyError:
+                        newnosy.append(user)
+                # We also rename 'nosy' with 'subscribers'
+                newlines.append('subscribers: %s' % ', '.join(newnosy))
+            else:
+                newlines.append(line)
+        return '\n'.join(newlines)
+
+    def generateChangeNote(self, issueid, oldvalues):
+        m = IssueClass.generateChangeNote(self, issueid, oldvalues)
+        return self.__fix_usernames_in_change_note(m)
+
+    def generateCreateNote(self, issueid):
+        m = IssueClass.generateCreateNote(self, issueid)
+        return self.__fix_usernames_in_change_note(m)
+
+
+issue = S3ITIssueClass(db, "issue",
                    topics=Multilink('topic'),
                    priority=Link('priority'),
                    dependencies=Multilink('issue'),
