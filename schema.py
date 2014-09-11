@@ -130,7 +130,7 @@ class S3ITIssueClass(IssueClass):
                     newlines.append(line)
             elif assignee_create_re.match(line):
                 # Matches new assignee
-                assignee = assignee_change_re.search(line).group(1)
+                assignee = assignee_create_re.search(line).group(1)
                 try:
                     realname = db.user.get(db.user.lookup(assignee), 'realname', assignee)
                     newlines.append('assignee: {} ({})'.format(
