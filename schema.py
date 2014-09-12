@@ -338,6 +338,10 @@ db.security.addPermissionToRole('User', p)
 p = db.security.addPermission(name='Search', klass='query')
 db.security.addPermissionToRole('User', p)
 
+# This search permission is needed to search issues.
+p = db.security.addPermission(name='Search', klass='issue')
+db.security.addPermissionToRole('User', p)
+
 p = db.security.addPermission(name='Edit', klass='query', check=edit_query,
     description="User is allowed to edit their queries")
 for r in 'User', 'Operator':
