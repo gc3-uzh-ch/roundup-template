@@ -28,6 +28,7 @@
    <th tal:condition="request/show/activity" i18n:translate="">Activity</th>
    <th tal:condition="request/show/actor" i18n:translate="">Actor</th>
    <th tal:condition="request/show/title" i18n:translate="">Title</th>
+   <th tal:condition="request/show/public"  i18n:translate="">Public</th>
    <th tal:condition="request/show/topics"  i18n:translate="">Topics</th>
    <th tal:condition="request/show/keyword"  i18n:translate="">Keywords</th>
    <th tal:condition="python:is_operator and request.show['projects']"  i18n:translate="">Projects</th>
@@ -56,6 +57,8 @@
     <a tal:attributes="href string:issue${i/id}"
 		tal:content="python:str(i.title.plain(hyperlink=0)) or '[no title]'">title</a>
    </td>
+   <td tal:condition="request/show/public"
+       tal:content="python:i.public.plain() or default">&nbsp;</td>
    <td tal:condition="request/show/topics"
        tal:content="python:i.topics.plain() or default">&nbsp;</td>
    <td tal:condition="request/show/keywords"

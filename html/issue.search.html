@@ -215,6 +215,21 @@
   <td metal:use-macro="group_input"></td>
 </tr>
 
+<tr tal:define="name string:public">
+  <th i18n:translate="">Is public:</th>
+  <td>
+    <div class="controls form-inline">
+      <input type="checkbox" name="public" value="yes" id="public_yes">
+      <label for="public_yes" class="rblabel">Yes</label>
+      <input type="checkbox" name="public" value="no" id="public_no" >
+      <label for="public_no" class="rblabel">No</label>
+    </div>
+  </td>
+  <td metal:use-macro="column_input"></td>
+  <td metal:use-macro="sort_input"></td>
+  <td metal:use-macro="group_input"></td>
+</tr>
+
 <tr>
  <th i18n:translate="">No Sort or group:</th>
  <td>&nbsp;</td>
