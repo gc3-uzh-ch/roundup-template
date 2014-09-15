@@ -136,7 +136,7 @@
   <td metal:use-macro="group_input"></td>
 </tr>
 
-
+<tal:block condition="nothing">
 <tr tal:define="name string:dependencies;
                 db_klass string:issue;
                 db_content string:id;">
@@ -146,6 +146,7 @@
   <td metal:use-macro="sort_input"></td>
   <td metal:use-macro="group_input"></td>
 </tr>
+</tal:block>
 
 <tr tal:define="name string:assignee;
                 db_klass string:user;

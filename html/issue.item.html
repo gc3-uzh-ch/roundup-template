@@ -187,7 +187,7 @@
             <dl class='dl-horizontal span6'>
               <dt i18n:translate="">Status</dt>
               <dd tal:content="structure context/status/plain"></dd>
-              <tal:block condition="is_operator">
+              <tal:block condition="python: 0 and is_operator">
                 <dt i18n:translate="">Dependencies</dt>
                 <dd tal:content="structure context/dependencies/plain"></dd>
                 <dt i18n:translate="">Link with</dt>
@@ -238,7 +238,7 @@
           </div> <!-- row-fluid -->
 
           <div class='row-fluid' tal:condition="context/id">
-            <tal:block condition="is_operator">
+            <tal:block condition="python: 0 and is_operator">
               <!-- Dependencies -->
               <div class='control-group span6'>
               <label class="control-label" data-toggle="popover"
