@@ -407,22 +407,56 @@
     </form>
 
     <!-- BEGIN merging form -->
-     <tal:if condition="python:context.is_edit_ok() and is_operator">
-       <form tal:condition="not:context/merged"
-             class="additional"
-             method="POST"
-             name="mergeForm">
-         <input type="hidden" name="@action" value="merge">
-         <label for="target_issue" i18n:translate="">Merge into</label>
-         <input type="text" id="target_issue" name="target_issue"
-                size="5">
-         <!-- Issue list not working at the moment -->
-         <!-- <span tal:contition="python:0" -->
-         <!--       tal:replace="structure python:db.issue.classhelp('id,title', property='merged', inputtype='radio', form='mergeForm')" /> -->
-         <input type="submit" value="  Merge  " i18n:attributes="value">
-       </form>
+    <tal:if condition="python:context.is_edit_ok() and is_operator">
+      <form tal:condition="not:context/merged"
+            class="additional"
+            method="POST"
+            name="mergeForm">
+        <div class='container-fluid control-group span12'>
+          <div class='span3'>
+            <input type="hidden" name="@action" value="merge">
+            <label class="control-label"
+                   data-toggle="popover"
+                   data-placement="top"
+                   data-content="Insert the ID of an issue.
+                                 This isssue will be *retired*, and further changes forbidden."
+                   for="target_issue" i18n:translate="">Merge into</label>
+            <input type="text" id="target_issue" name="target_issue"
+                   size="5">
+            <!-- Issue list not working at the moment -->
+            <!-- <span tal:contition="python:0" -->
+                       <!--       tal:replace="structure python:db.issue.classhelp('id,title', property='merged', inputtype='radio', form='mergeForm')" /> -->
+                       <br />
+                       <input type="submit" value="  Merge  "
+                              i18n:attributes="value">
+          </div>
+        </div>
+      </form>
      </tal:if>
     <!-- END merging form -->
+
+    <!-- BEGIN unmerging form -->
+    <tal:if condition="python:context.is_edit_ok() and is_operator">
+      <form tal:condition="context/merged"
+            class="additional"
+            method="POST"
+            name="unmergeForm">
+        <div class='container-fluid control-group'>
+            <p>Issue currently retired and merged with
+              <a tal:attributes="href string:issue${context/merged/id}"
+                 tal:content="string:issue${context/merged/id}:
+                              ${context/merged/title}" /></p>
+            <p>Click the <i>Unmerge</i> button to restore the issue
+            and undo the merging</p>
+            <input type="hidden" name="@action" value="unmerge">
+            <!-- Issue list not working at the moment -->
+            <!-- <span tal:contition="python:0" -->
+            <!--       tal:replace="structure python:db.issue.classhelp('id,title', property='merged', inputtype='radio', form='mergeForm')" /> -->
+            <input type="submit" value="  Unmerge  " i18n:attributes="value">
+        </div>
+      </form>
+    </tal:if>
+    <!-- END unmerging form -->
 
     <p tal:condition="context/id" i18n:translate="">
      Created on <b><tal:x replace="python:context.creation.pretty('%Y-%m-%d %H:%M')" i18n:name="creation" /></b>

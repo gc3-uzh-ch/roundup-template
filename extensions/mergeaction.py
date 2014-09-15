@@ -86,5 +86,14 @@ class MergeAction(actions.Action):
         raise Redirect, """%sissue%s?@ok_message=Merging of issue %s into issue
         %s successful""" % (self.base, target_issue, source_issue, target_issue)
 
+class UnmergeAction(actions.Action):
+    def handle(self):
+        merged = self.db.issue.get(self.nodeid, 'merged')
+        if merged:
+            self.db.issue.restore(self.nodeid)
+            self.db.issue.set(self.nodeid, merged=None)
+            self.db.commit()
+
 def init(instance):
     instance.registerAction('merge', MergeAction)
+    instance.registerAction('unmerge', UnmergeAction)
