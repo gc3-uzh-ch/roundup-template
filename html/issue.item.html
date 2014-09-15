@@ -28,6 +28,20 @@
 <div metal:fill-slot="content"
     tal:define="is_operator python:request.user.hasRole('Operator');" >
 
+  <p class="alert alert-error"
+     tal:condition="context/merged"> Issue has been merged with
+    <a tal:attributes="href string:issue${context/merged/id}"
+    tal:content="string:issue${context/merged/id}:
+    ${context/merged/title}" />. Further updates should be performed
+    there.
+  </p>
+
+  <p class="alert alert-error" tal:condition="context/is_retired|nothing">This
+  issue has been <i>retired</i>. Further changes are not possible on
+  this issue.
+  </p>
+     
+
   <p tal:condition="python:not (context.is_view_ok()
    or request.user.hasRole('Anonymous'))" i18n:translate="" class='alert alert-error'>
    You are not allowed to view this page.</p>
@@ -391,6 +405,24 @@
         <!--  i18n:translate="" class='btn'>Make a copy</a> -->
       </div>
     </form>
+
+    <!-- BEGIN merging form -->
+     <tal:if condition="python:context.is_edit_ok() and is_operator">
+       <form tal:condition="not:context/merged"
+             class="additional"
+             method="POST"
+             name="mergeForm">
+         <input type="hidden" name="@action" value="merge">
+         <label for="target_issue" i18n:translate="">Merge into</label>
+         <input type="text" id="target_issue" name="target_issue"
+                size="5">
+         <!-- Issue list not working at the moment -->
+         <!-- <span tal:contition="python:0" -->
+         <!--       tal:replace="structure python:db.issue.classhelp('id,title', property='merged', inputtype='radio', form='mergeForm')" /> -->
+         <input type="submit" value="  Merge  " i18n:attributes="value">
+       </form>
+     </tal:if>
+    <!-- END merging form -->
 
     <p tal:condition="context/id" i18n:translate="">
      Created on <b><tal:x replace="python:context.creation.pretty('%Y-%m-%d %H:%M')" i18n:name="creation" /></b>

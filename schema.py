@@ -177,6 +177,7 @@ issue = S3ITIssueClass(db, "issue",
                    deadline=Date(),
                    public=Boolean(default_value=False),
                    extra_keywords=String(),
+                   merged=Link("issue"),
 )
 
 
