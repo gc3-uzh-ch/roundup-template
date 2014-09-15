@@ -85,7 +85,14 @@ msg = FileClass(db, "msg",
                 files=Multilink("file"),
                 messageid=String(),
                 inreplyto=String(),
+                mailcommands=String(),
  )
+
+# mailcommands are commands parsed from the content of the message.
+# We need a separate field because the update of the message and issue
+# via email requires both an auditor and a detector, and we need to
+# pass information from one to the other.
+
 
 # File
 file = FileClass(db, "file",

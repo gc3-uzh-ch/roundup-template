@@ -3,6 +3,41 @@ import re
 from roundup.mailgw import parseContent
 import roundup.hyperdb
 
+def properties_parser(db, cl, nodeid, newvalues):
+    """This function will:
+    * parse the content of the message for command lines
+    * move command lines into the `messagecommands` field
+    * update the content of the message
+    """
+    if 'content' not in newvalues:
+        return
+
+    log = db.get_logger().getChild('messageproperties')
+    contentlines = newvalues['content'].split('\n')
+    mailcommands = []
+
+    for line in contentlines[:]:
+        if not line:
+            # Empty line, just skip it
+            continue
+        match = re.search('^(?P<prop>[^:]*):\s*(?P<value>.*)', line, re.I)
+        
+        if not match:
+            # We are done parsing the input, this is a "regular"
+            # comment line
+            log.info("No more line to process in content body")
+            break
+        elif match.group('prop').lower() not in db.issue.properties:
+            # Possibly a mispelled property. Just skip it
+            continue
+
+        mailcommands.append(line)
+        contentlines.remove(line)
+
+    # Update message values
+    newvalues['mailcommands'] = str.join('\n', mailcommands)
+    newvalues['content'] = str.join('\n', contentlines).strip()
+    newvalues['summary'] = contentlines[0]
 
 def properties_updater(db, cl, nodeid, oldvalues):
     """This function scans the content of an email for special fields to
@@ -43,10 +78,11 @@ def properties_updater(db, cl, nodeid, oldvalues):
     will add `Topic3` and remove `Topic2` to the list of topics.
 
     """
+    log = db.get_logger().getChild('messageproperties')
+    log.debug("called with nodeid: %s" % nodeid)
     if not nodeid:
         return
 
-    log = db.get_logger().getChild('messageproperties')
     msg = db.msg.getnode(nodeid)
     issues = db.issue.find(messages=nodeid)
     if not issues:
@@ -57,9 +93,9 @@ def properties_updater(db, cl, nodeid, oldvalues):
 
     issue = db.issue.getnode(issues[0])
 
-    contentlines = msg.content.split('\n')
+    contentlines = msg.mailcommands.split('\n')
 
-    for line in contentlines[:]:
+    for line in contentlines:
         match = re.search('^(?P<prop>[^:]*):\s*(?P<value>.*)', line, re.I)
         
         if not match or match.group('prop').lower() not in db.issue.properties:
@@ -68,7 +104,6 @@ def properties_updater(db, cl, nodeid, oldvalues):
             break
 
         log.debug("Processing content line '%s'", line)
-        contentlines.remove(line)
         propname = match.group('prop').lower()
         propclass = db.issue.properties[propname]
         
@@ -149,17 +184,10 @@ def properties_updater(db, cl, nodeid, oldvalues):
         except KeyError:
             log.error("No priority `normal` available. Can't set default priority.")
 
-    newcontent = str.join('\n', contentlines).strip()
-
-    if newcontent != msg.content:
-        log.debug("Removing 'command' lines from content.")
-        log.debug("New content: %s", newcontent)
-        # This can cause a loop!
-        msg.content = newcontent
-        msg.summary = msg.content.split('\n')[0]
 
 def init(db):
     # fire before changes are made
+    db.msg.audit('set', properties_parser)
     db.msg.react('set', properties_updater)
 
 # vim: set filetype=python ts=4 sw=4 et si
