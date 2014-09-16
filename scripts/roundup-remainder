@@ -175,7 +175,12 @@ def send_message_for(db, send_to, subject, text, debug=False):
 
     msg = text
 
-    msg = unicode(msg).encode(charset)
+    try:
+        msg = unicode(msg).encode(charset)
+    except UnicodeDecodeError as ex:
+        print("Error converting text of email for `%s` with subject `%s`: `%s`" % (
+            send_to, subject, ex))
+        print("Sending the bare text without converting.")
 
     mailer = Mailer(db.config)
     message = mailer.get_standard_message()
@@ -198,7 +203,7 @@ def send_message_for(db, send_to, subject, text, debug=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('-d', '--days', default=7, help="Days")
+    parser.add_argument('-d', '--days', default=7, type=int, help="Days")
     parser.add_argument('instance_home', help="Instance home")
     parser.add_argument('--debug', action='store_true', help="Do not actually send the email, just print the output.")
 
