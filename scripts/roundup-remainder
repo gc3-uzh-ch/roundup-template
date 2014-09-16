@@ -1,0 +1,273 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-# 
+# @(#)roundup-remainder
+# 
+# 
+# Copyright (C) 2014, GC3, University of Zurich. All rights reserved.
+# 
+# 
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation; either version 2 of the License, or (at your
+# option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+"""
+
+This command will look into the roundup database for issues that
+has not been updated recently and for issues with very close deadline,
+and send a notification email for each one of them to their assignee.
+
+"""
+__docformat__ = 'reStructuredText'
+__author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
+
+import argparse
+import os
+import sys
+
+from email.Utils import formataddr
+
+from roundup.date import Date
+from roundup import instance
+from roundup.mailer import Mailer, nice_sender_header, encode_quopri, MessageSendError
+
+OLD_ISSUE_TEXT="""
+Dear %(fullname)s,
+
+This is an automated message.
+
+Roundup issue %(issue_id)s was assigned to you, but it has not been
+updated in the last %(days)s days.
+
+Keeping an up-to-date record of the current work on an issue is very
+important, please, take some time to update the issue.
+
+The issue is available at %(issue_url)s
+
+Sincerly,
+
+    Your frienldy Roundup spambot
+"""
+
+DEADLINE_CLOSE_TEXT="""
+Dear %(fullname)s,
+
+This is an automated message.
+
+Your roundup tracker is worried, because issue %(issue_id)s
+is very close to its deadline, which is %(deadline)s.
+
+If the issue was already fixed, please update its status by opening
+the web page %(issue_url)s
+
+Sincerly,
+
+    Your frienldy Roundup spambot
+"""
+
+DEADLINE_PASSED_TEXT="""
+Dear %(fullname)s,
+
+This is an automated message.
+
+The issue %(issue_id)s, assigned to you, expired on %(deadline)s,
+%(days)s days ago.
+
+If the issue was already fixed, please update its status by opening
+the web page %(issue_url)s
+
+Sincerly,
+
+    Your frienldy Roundup spambot
+"""
+
+
+def opened_issues(db):
+    """Returns a list of issue objects which status is not a terminal one (closed, wontfix, invalid)."""
+
+    # >>> [(i.id, i.name) for i in [db.status.getnode(i) for i in db.status.list()]]
+    # [('1', 'new'), ('2', 'open'), ('3', 'closed'), ('4', 'invalid'), ('5', 'pending'), ('6', 'wontfix')]
+
+    # First get the IDs
+    opened_issue_ids = db.issue.find(status=[None, 1, 2, 5])
+
+    opened_issues = [db.issue.getnode(i) for i in opened_issue_ids]
+
+    return opened_issues
+
+
+def search_old_issues(db, days):
+    """
+    Search all the issues that have not been modified in the last `days` days.
+    
+    Returns a list of issue objects
+    """
+    issues = []
+    days = "%dd" % days
+
+    timeline = Date(". -%s" % days)
+
+    for issue in opened_issues(db):
+        if max([i[1] for i in issue.history()]) < timeline:
+            issues.append(issue)
+    return issues
+
+
+def search_deadline_issues(db):
+    """
+    Search for issues with 
+    """
+    issues = []
+    warning_days = [1, 2, 3, 5, 7, 14]
+
+    now = Date('.')
+
+    for issue in opened_issues(db):
+        if not issue.deadline:
+            continue
+
+        missing_days = (now - issue.deadline).day
+        if issue.deadline < now or missing_days in warning_days:
+            issues.append(issue)
+    
+    return issues
+
+
+def get_issue_url(db, issue):
+    base = db.config.TRACKER_WEB
+    if (not isinstance(base , type('')) or
+        not (base.startswith('http://') or base.startswith('https://'))):
+        web = "Configuration Error: TRACKER_WEB isn't a " \
+              "fully-qualified URL"
+    else:
+        if not base.endswith('/'):
+            base = base + '/'
+        web = base + issue.cl.classname + issue.id
+
+    return web
+
+
+def get_footer(db, issue):
+    web = get_issue_url(db, issue)
+    # ensure the email address is properly quoted
+    email = formataddr((db.config.TRACKER_NAME,
+        db.config.TRACKER_EMAIL))
+
+    line = '_' * max(len(web)+2, len(email))
+    return '\n%s\n%s\n<%s>\n%s'%(line, email, web, line)
+
+
+def send_message_for(db, send_to, subject, text, debug=False):
+    from_address = db.config.TRACKER_EMAIL
+
+    charset = getattr(db.config, 'EMAIL_CHARSET', 'utf-8')
+    tracker_name = db.config.TRACKER_NAME
+
+    author = (tracker_name, from_address)
+
+    msg = text
+
+    msg = unicode(msg).encode(charset)
+
+    mailer = Mailer(db.config)
+    message = mailer.get_standard_message()
+    message['Reply-To'] = tracker_name
+
+    mailer.set_message_attributes(message, [send_to], subject, author)
+
+    message.set_payload(msg)
+    encode_quopri(message)
+    if debug:
+        print """
+------------------- debug -------------------
+%s
+------------------- debug -------------------
+    """ % (message)
+    else:
+        mailer.smtp_send([send_to], message.as_string())
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('-d', '--days', default=7, help="Days")
+    parser.add_argument('instance_home', help="Instance home")
+    parser.add_argument('--debug', action='store_true', help="Do not actually send the email, just print the output.")
+
+    opts = parser.parse_args()
+    try:
+        inst = instance.open(opts.instance_home)
+        db = inst.open('admin')
+    except Exception, ex:
+        sys.stderr.write("ERROR: Instance home %s invalid: %s\n" % (opts.instance_home, ex))
+
+    old_issues = search_old_issues(db, opts.days)
+    close_to_deadline = search_deadline_issues(db)
+
+    now = Date('.')
+
+    # send an email to assignees of each one of these
+    for issue in old_issues:
+        last_modification = max([i[1] for i in issue.history()])
+        data = {'issue_id' : issue.id,
+                'issue_url' : get_issue_url(db, issue),
+                'days' : (now - last_modification).day,
+        }
+        if issue.assignee:
+            assignee = db.user.getnode(issue.assignee)
+            data['fullname'] = assignee.realname
+            data['send_to'] = assignee.address
+        else:
+            data['fullname'] = "Roundup Administrator"
+            data['send_to' ] = db.config.DISPATCHER_EMAIL
+
+        subject="""[issue%s] Roundup reminder: issue%s "%s" needs an update""" % (issue.id, issue.id, issue.title)
+        text = (OLD_ISSUE_TEXT % data) + get_footer(db, issue)
+        try:
+            send_message_for(db, data['send_to'], subject, text, opts.debug)
+            db.addjournal(db.issue.classname, issue.id, 'notification sent', {})
+            db.commit()
+        except MessageSendError:
+            ### XXX: We should enable logging!
+            pass
+
+    for issue in close_to_deadline:
+        deadline_in_the_past = now > issue.deadline
+        missing_to_deadline = (now - issue.deadline)
+        data = {'issue_id' : issue.id,
+                'issue_url' : get_issue_url(db, issue),
+                'days' : missing_to_deadline.day,
+                'deadline': issue.deadline.pretty('%Y-%m-%d')
+        }
+        if int(data['days']) > 30:
+            data['days'] = "really, really too many (%s)" % data['days']
+        if issue.assignee:
+            assignee = db.user.getnode(issue.assignee)
+            data['fullname'] = assignee.realname
+            data['send_to'] = assignee.address
+        else:
+            data['fullname'] = "Roundup Administrator"
+            data['send_to' ] = db.config.DISPATCHER_EMAIL
+
+        if deadline_in_the_past:
+            subject = "[issue%s] ROUNDUP ISSUE %s PASSED DEADLINE (%s) by %s days!" % (issue.id, issue.id, issue.deadline.pretty('%Y-%m-%d'), missing_to_deadline.day)
+            text = (DEADLINE_PASSED_TEXT % data) + get_footer(db, issue)
+        else:
+            subject = "[issue%s] Roundup reminder: issue %s: missing %s days to deadline (%s)" % (issue.id, issue.id, missing_to_deadline.day, issue.deadline.pretty('%Y-%m-%d')) 
+            text = (DEADLINE_CLOSE_TEXT % data) + get_footer(db, issue)
+
+        try:
+            send_message_for(db, data['send_to'], subject, text, opts.debug)
+            db.addjournal(db.issue.classname, issue.id, 'notification sent', {})
+            db.commit()
+        except MessageSendError:
+            ### XXX: We should enable logging!
+            pass

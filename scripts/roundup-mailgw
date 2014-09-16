@@ -1,0 +1,96 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-# 
+# @(#)roundup-mailgw
+# 
+# 
+# Copyright (C) 2014, GC3, University of Zurich. All rights reserved.
+# 
+# 
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation; either version 2 of the License, or (at your
+# option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+__docformat__ = 'reStructuredText'
+__author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
+
+from roundup.scripts.roundup_mailgw import *
+from roundup import mailgw
+from roundup.mailgw import *
+
+# Monkey patching!
+
+def uidFromAddress(db, address, create=1, **user_props):
+    ''' address is from the rfc822 module, and therefore is (name, addr)
+
+        user is created if they don't exist in the db already
+        user_props may supply additional user information
+    '''
+    (realname, address) = address
+
+    # try a straight match of the address
+    user = extractUserFromList(db.user, db.user.stringFind(address=address))
+    if user is not None:
+        return user
+
+    # try the user alternate addresses if possible
+    props = db.user.getprops()
+    if props.has_key('alternate_addresses'):
+        users = db.user.filter(None, {'alternate_addresses': address})
+        # We want an exact match of the email, not just a substring
+        # match. Otherwise e.g. support@example.com would match
+        # discuss-support@example.com which is not what we want.
+        found_users = []
+        for u in users:
+            alt = db.user.get(u, 'alternate_addresses').split('\n')
+            for a in alt:
+                if a.strip().lower() == address.lower():
+                    found_users.append(u)
+                    break
+        user = extractUserFromList(db.user, found_users)
+        if user is not None:
+            return user
+
+    # try to match the username to the address (for local
+    # submissions where the address is empty)
+    user = extractUserFromList(db.user, db.user.stringFind(username=address))
+
+    # couldn't match address or username, so create a new user
+    if create:
+        # generate a username
+        username = address
+        trying = username
+        n = 0
+        while 1:
+            try:
+                # does this username exist already?
+                db.user.lookup(trying)
+            except KeyError:
+                break
+            n += 1
+            trying = username + str(n)
+
+        # create!
+        try:
+            return db.user.create(username=trying, address=address,
+                realname=realname, roles=db.config.NEW_EMAIL_USER_ROLES,
+                password=password.Password(password.generatePassword(), config=db.config),
+                **user_props)
+        except exceptions.Reject:
+            return 0
+    else:
+        return 0
+
+mailgw.uidFromAddress = uidFromAddress
+
+if __name__ == "__main__":
+    run()
