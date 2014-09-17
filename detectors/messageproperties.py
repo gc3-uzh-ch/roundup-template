@@ -141,8 +141,14 @@ def properties_parser(db, cl, nodeid, newvalues):
 
     # Update message values
     newvalues['mailcommands'] = str.join('\n', mailcommands)
+
+    # If no content lines are present, put an automatic text
+    if not contentlines:
+        contentlines = mailcommands
     newvalues['content'] = str.join('\n', contentlines).strip()
-    newvalues['summary'] = contentlines[0]
+    if contentlines:
+        newvalues['summary'] = contentlines[0]
+        
 
 def issue_properties_updater(db, cl, nodeid, newvalues):
     """This function parses the `mailcommands` field and will set issue
