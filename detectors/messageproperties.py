@@ -69,38 +69,36 @@ Implementation note
 -------------------
 
 When a new issue is created, *first* are created the messages, and
-*then* the issue is created. This means that the issue a message
-refers may not be created when the auditor ``db.msg.audit('set',...)``
-is created, therefore we cannot modify the issue with an *auditor*.
+*then* the issue is created.
 
-However, we want to remove the command lines from the content of the
-message, but this cannot be done in a *reactor*, because otherwise we
-will fire up the detector over and over again, and will get a `Maximum
-Recursion Depth Exceeded` error.
+As a consequence, we have to split the operation in two steps:
 
-In order to solve this issue, the message must have a *fake* field
-`mailcommands`::
+1) get the "command lines" from the message when it is created (and
+   remove them from the content of the message itself)
+
+2) use the "command lines" from the message when the issue is created
+   to update the issue.
+
+This is done with two auditors: one for the creation of a message, the
+other for the creation of an issue.
+
+The main problem, however, is passing the "command lines" from the
+message auditor to the issue auditor. This is done using a *fake*
+field in `msg` class, called `mailcommands`::
 
     msg = FileClass(db, "msg",
                     ...
                     mailcommands=String(),
     )
 
-then, the ``properties_parser`` **auditor** is called first: this will
-parse the content and add command lines to `mailcommands`, and remove
-them from the `content` of the message.
+This is filled by the message auditor with the lines corresponding to
+commands. Then, the issue auditor will parse these lines and set the
+corresponding properties.
 
-At this point, we can call the ``properties_updater`` **reactor**,
-which is called on **set** action though, instead of **create**. This
-reactor reads `mailcommands` value and updating the issue.
+When a new issue is *updated*, instead, we cannot know which one is
+the *last* message, so that we have to clear the `mailcommands` field.
 
-Finally, we *must* clear the `mailcommands` field, in order to avoid
-that updating the text of the message will update again the issue
-using old, stale values. This is done by calling
-``clear_mailcommands`` **reactor**, but with priority 110 (deafult is
-100), to ensure it is called *after* ``priorities_updater``. This
-reactor is always called **twice**, but since it's very easy to make
-it idempotent it's not a big deal.
+
 """
 
 import re
@@ -146,133 +144,112 @@ def properties_parser(db, cl, nodeid, newvalues):
     newvalues['content'] = str.join('\n', contentlines).strip()
     newvalues['summary'] = contentlines[0]
 
-def properties_updater(db, cl, nodeid, oldvalues):
+def issue_properties_updater(db, cl, nodeid, newvalues):
     """This function parses the `mailcommands` field and will set issue
     properties accordingly.
 
     """
-    if not nodeid:
+    if 'messages' not in newvalues or not newvalues['messages']:
         return
-
     log = db.get_logger()
-    msg = db.msg.getnode(nodeid)
-    issues = db.issue.find(messages=nodeid)
-    if not issues:
-        # No issues found for this message! How is that possible?
-        log.error("messageproperties.properties_updater: No issue related to msg %s!!! Stopping processing",
-                  nodeid)
-        return
+    
+    messages = newvalues.get('messages')[:]
+    if nodeid:
+        oldmessages = db.issue.get(nodeid, 'messages')
+        for msgid in oldmessages:
+            if msgid in messages:
+                messages.remove(msgid)
 
-    issue = db.issue.getnode(issues[0])
+    for msgid in messages:
+        msg = db.msg.getnode(msgid)
 
-    if not msg.mailcommands:
-        return
+        if not msg.mailcommands:
+            continue
+        contentlines = msg.mailcommands.split('\n')
 
-    contentlines = msg.mailcommands.split('\n')
+        for line in contentlines:
+            match = re.search('^(?P<prop>[^:]*):\s*(?P<value>.*)', line, re.I)
 
-    for line in contentlines:
-        match = re.search('^(?P<prop>[^:]*):\s*(?P<value>.*)', line, re.I)
-        
-        if not match or match.group('prop').lower() not in db.issue.properties:
-            # We are done parsing the input
-            log.info("messageproperties.properties_updater: No more line to process in content body")
-            break
+            if not match or match.group('prop').lower() not in db.issue.properties:
+                # We are done parsing the input
+                log.info("messageproperties.properties_updater: No more line to process in content body")
+                break
 
-        log.debug("messageproperties.properties_updater: Processing content line '%s'", line)
-        propname = match.group('prop').lower()
-        propclass = db.issue.properties[propname]
-        
-        if isinstance(propclass, roundup.hyperdb.Multilink):
-            propdb = db.getclass(propclass.classname)
-            # If at least one property name starts with +, all properties will be
-            # added. 
-            # Any property staritng with - will be removed.
-            all_props = [p.strip() for p in match.group('value').split(',')]
-            prop_del = sum([propdb.stringFind(**{propdb.key: p[1:]}) for p in all_props if p[0] == '-'],
-                           [])
-            prop_add = sum([propdb.stringFind(**{propdb.key: p[1:]}) for p in all_props if p[0] == '+'],
-                           [])
-            prop_set = sum([propdb.stringFind(**{propdb.key: p}) for p in all_props if p[0] not in ('+', '-')],
-                           [])
+            log.debug("messageproperties.properties_updater: Processing content line '%s'", line)
+            propname = match.group('prop').lower()
+            propclass = db.issue.properties[propname]
 
-            cur_list = issue[propname]
-            for i in prop_del:
-                cur_list.remove(i)
-            if prop_del or prop_add:
-                for i in prop_add + prop_set:
-                    cur_list.append(i)
-            else:
-                cur_list = prop_add + prop_set
+            if isinstance(propclass, roundup.hyperdb.Multilink):
+                propdb = db.getclass(propclass.classname)
+                # If at least one property name starts with +, all properties will be
+                # added. 
+                # Any property staritng with - will be removed.
+                all_props = [p.strip() for p in match.group('value').split(',')]
+                prop_del = sum([propdb.stringFind(**{propdb.key: p[1:]}) for p in all_props if p[0] == '-'],
+                               [])
+                prop_add = sum([propdb.stringFind(**{propdb.key: p[1:]}) for p in all_props if p[0] == '+'],
+                               [])
+                prop_set = sum([propdb.stringFind(**{propdb.key: p}) for p in all_props if p[0] not in ('+', '-')],
+                               [])
 
-            log.debug("messageproperties.properties_updater: Setting property '%s' of issue%s to '%s'.",
-                      propname, issue.id, str.join(', ', set(cur_list)))
-            issue[propname] = list(set(cur_list))
-        elif isinstance(propclass, roundup.hyperdb.Link):
-            propdb = db.getclass(propclass.classname)
-            propvalue = propdb.stringFind(**{propdb.key: match.group('value')})
-            if propvalue:
-                log.debug("messageproperties.properties_updater: Setting property '%s' of issue%s to '%s'.", propname, issue.id, propvalue[0])
-                issue[propname] = propvalue[0]
-        elif isinstance(propclass, roundup.hyperdb.Date):
-            # Date is a special case
-            try:
-                propvalue = propclass.from_raw(match.group('value'), db)
+                cur_list = newvalues.get(propname, [])
+                if propname not in newvalues and nodeid:
+                    cur_list = db.issue.get(nodeid, propname)
+                for i in prop_del:
+                    cur_list.remove(i)
+                if prop_del or prop_add:
+                    for i in prop_add + prop_set:
+                        cur_list.append(i)
+                else:
+                    cur_list = prop_add + prop_set
+
+                log.debug("messageproperties.properties_updater: Setting property '%s' of new issue to '%s'.",
+                          propname, str.join(', ', set(cur_list)))
+                newvalues[propname] = list(set(cur_list))
+            elif isinstance(propclass, roundup.hyperdb.Link):
+                propdb = db.getclass(propclass.classname)
+                propvalue = propdb.stringFind(**{propdb.key: match.group('value')})
                 if propvalue:
-                    log.debug("messageproperties.properties_updater: Setting property '%s' of issue%s to '%s'.", propname, issue.id, propvalue)
-                    issue[propname] = propvalue
-            except KeyError:
-                # An invalid date raises a KeyError value. Don't ask me why...
-                # >>> from roundup.hyperdb import Date
-                # >>> Date().from_raw('01/02/2014', db)
-                # Traceback (most recent call last):
-                #   File "<stdin>", line 1, in <module>
-                #   File "/usr/local/roundup-env/local/lib/python2.7/site-packages/roundup/hyperdb.py", line 103, in from_raw
-                #     'date (%s)')%(kw['propname'], value, message)
-                # KeyError: 'propname'
-                # >>> Date().from_raw('asd', db)
-                # Traceback (most recent call last):
-                #   File "<stdin>", line 1, in <module>
-                #   File "/usr/local/roundup-env/local/lib/python2.7/site-packages/roundup/hyperdb.py", line 103, in from_raw
-                #     'date (%s)')%(kw['propname'], value, message)
-                # KeyError: 'propname'
-                # >>> Date().from_raw('2014-01-02', db)
-                # <Date 2014-01-02.00:00:00.000>
-                log.error("messageproperties.properties_updater: Invalid date format '%s'. Should be in yyyy[-mm[-dd]], mm-dd, hh:mm:ss or [\dsmywd]+" % match.group('value'))
-        else:
-            propvalue = propclass.from_raw(match.group('value'))
-            log.debug("messageproperties.properties_updater: Setting property '%s' of issue%s to '%s'.", propname, issue.id, propvalue)
-            issue[propname] = propvalue
-            
-    # This is useful only to update old tickets!
-    # Relates to issue 235: https://www.s3it.uzh.ch/help/issue235
-    if not issue.status and not oldvalues.get('status', False):
-        try:
-            issue['status'] = db.status.lookup('new')
-        except KeyError:
-            log.error("messageproperties.properties_updater: No status `new` available. Can't set default status.")
+                    log.debug("messageproperties.properties_updater: Setting property '%s' of new issue to '%s'.", propname, propvalue[0])
+                    newvalues[propname] = propvalue[0]
+            elif isinstance(propclass, roundup.hyperdb.Date):
+                # Date is a special case
+                try:
+                    propvalue = propclass.from_raw(match.group('value'), db)
+                    if propvalue:
+                        log.debug("messageproperties.properties_updater: Setting property '%s' of new issue to '%s'.", propname, propvalue)
+                        newvalues[propname] = propvalue
+                except KeyError:
+                    # An invalid date raises a KeyError value. Don't ask me why...
+                    # >>> from roundup.hyperdb import Date
+                    # >>> Date().from_raw('01/02/2014', db)
+                    # Traceback (most recent call last):
+                    #   File "<stdin>", line 1, in <module>
+                    #   File "/usr/local/roundup-env/local/lib/python2.7/site-packages/roundup/hyperdb.py", line 103, in from_raw
+                    #     'date (%s)')%(kw['propname'], value, message)
+                    # KeyError: 'propname'
+                    # >>> Date().from_raw('asd', db)
+                    # Traceback (most recent call last):
+                    #   File "<stdin>", line 1, in <module>
+                    #   File "/usr/local/roundup-env/local/lib/python2.7/site-packages/roundup/hyperdb.py", line 103, in from_raw
+                    #     'date (%s)')%(kw['propname'], value, message)
+                    # KeyError: 'propname'
+                    # >>> Date().from_raw('2014-01-02', db)
+                    # <Date 2014-01-02.00:00:00.000>
+                    log.error("messageproperties.properties_updater: Invalid date format '%s'. Should be in yyyy[-mm[-dd]], mm-dd, hh:mm:ss or [\dsmywd]+" % match.group('value'))
+            else:
+                propvalue = propclass.from_raw(match.group('value'))
+                log.debug("messageproperties.properties_updater: Setting property '%s' of new issue to '%s'.", propname, propvalue)
+                newvalues[propname] = propvalue
 
-    # This is useful only to update old tickets!
-    # Relates to issue 233: https://www.s3it.uzh.ch/help/issue233
-    if not issue.priority and not oldvalues.get('priority', False):
-        try:
-            issue['priority'] = db.priority.lookup('normal')
-        except KeyError:
-            log.error("messageproperties.properties_updater: No priority `normal` available. Can't set default priority.")
+            msg.mailcommands = ''
 
-def clear_mailcommands(db, cl, nodeid, oldvalues):
-    """Used to remove mailcommands after properties_updater is done"""
-    msg = db.msg.getnode(nodeid)
-    if not msg.mailcommands:
-        db.get_logger().debug("messageproperties.clear_mailcommands: mailcommands from msg%s is empty" % nodeid)
-        return
-    db.get_logger().debug("messageproperties.clear_mailcommands: Clearing mailcommands from msg%s" % nodeid)
-    msg.mailcommands = ''
 
 def init(db):
     # fire before changes are made
     db.msg.audit('create', properties_parser)
-    db.msg.react('set', properties_updater, priority=100)
-    db.msg.react('set', clear_mailcommands, priority=110)
+    db.issue.audit('create', issue_properties_updater)
+    db.issue.audit('set', issue_properties_updater)
 
 # vim: set filetype=python ts=4 sw=4 et si
 #SHA: 4dc3c37fa69612010a9684a544585aabe836bf35
