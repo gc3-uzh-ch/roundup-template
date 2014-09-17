@@ -18,7 +18,8 @@ topic = Class(db, 'topic',
                   name=String(),
                   description=String(),
                   order=Number(),
-                  assign_to=Link('user'))
+                  assign_to=Link('user'),
+                  autonosy=Multilink('user'))
 topic.setkey('name')
 
 
