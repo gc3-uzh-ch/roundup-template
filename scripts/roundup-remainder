@@ -44,8 +44,8 @@ Dear %(fullname)s,
 
 This is an automated message.
 
-Roundup issue %(issue_id)s was assigned to you, but it has not been
-updated in the last %(days)s days.
+Roundup issue %(issue_id)s ("%(issue_title)s") was assigned to you,
+but it has not been updated in the last %(days)s days.
 
 Keeping an up-to-date record of the current work on an issue is very
 important, please, take some time to update the issue.
@@ -63,7 +63,8 @@ Dear %(fullname)s,
 This is an automated message.
 
 Your roundup tracker is worried, because issue %(issue_id)s
-is very close to its deadline, which is %(deadline)s.
+("%(issue_title)s") is very close to its deadline, which is
+%(deadline)s.
 
 If the issue was already fixed, please update its status by opening
 the web page %(issue_url)s
@@ -78,8 +79,11 @@ Dear %(fullname)s,
 
 This is an automated message.
 
-The issue %(issue_id)s, assigned to you, expired on %(deadline)s,
-%(days)s days ago.
+The issue %(issue_id)s, assigned to you, with title:
+
+     %(issue_title)s
+
+expired on %(deadline)s, %(days)s days ago.
 
 If the issue was already fixed, please update its status by opening
 the web page %(issue_url)s
@@ -223,6 +227,7 @@ if __name__ == "__main__":
     for issue in old_issues:
         last_modification = max([i[1] for i in issue.history()])
         data = {'issue_id' : issue.id,
+                'issue_title' : issue_title,
                 'issue_url' : get_issue_url(db, issue),
                 'days' : (now - last_modification).day,
         }
@@ -234,7 +239,7 @@ if __name__ == "__main__":
             data['fullname'] = "Roundup Administrator"
             data['send_to' ] = db.config.DISPATCHER_EMAIL
 
-        subject="""[issue%s] Roundup reminder: issue%s "%s" needs an update""" % (issue.id, issue.id, issue.title)
+        subject="""[issue%s] Roundup reminder: issue "%s" needs an update""" % (issue.id, issue.title)
         text = (OLD_ISSUE_TEXT % data) + get_footer(db, issue)
         try:
             send_message_for(db, data['send_to'], subject, text, opts.debug)
@@ -248,6 +253,7 @@ if __name__ == "__main__":
         deadline_in_the_past = now > issue.deadline
         missing_to_deadline = (now - issue.deadline)
         data = {'issue_id' : issue.id,
+                'issue_title' : issue_title,
                 'issue_url' : get_issue_url(db, issue),
                 'days' : missing_to_deadline.day,
                 'deadline': issue.deadline.pretty('%Y-%m-%d')
@@ -263,10 +269,10 @@ if __name__ == "__main__":
             data['send_to' ] = db.config.DISPATCHER_EMAIL
 
         if deadline_in_the_past:
-            subject = "[issue%s] ROUNDUP ISSUE %s PASSED DEADLINE (%s) by %s days!" % (issue.id, issue.id, issue.deadline.pretty('%Y-%m-%d'), missing_to_deadline.day)
+            subject = """[issue%s] ROUNDUP ISSUE "%s" PASSED DEADLINE (%s) by %s days!""" % (issue.id, issue.title, issue.deadline.pretty('%Y-%m-%d'), missing_to_deadline.day)
             text = (DEADLINE_PASSED_TEXT % data) + get_footer(db, issue)
         else:
-            subject = "[issue%s] Roundup reminder: issue %s: missing %s days to deadline (%s)" % (issue.id, issue.id, missing_to_deadline.day, issue.deadline.pretty('%Y-%m-%d')) 
+            subject = "[issue%s] Roundup reminder: issue %s: missing %s days to deadline (%s)" % (issue.id, issue.title, missing_to_deadline.day, issue.deadline.pretty('%Y-%m-%d')) 
             text = (DEADLINE_CLOSE_TEXT % data) + get_footer(db, issue)
 
         try:
