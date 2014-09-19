@@ -227,7 +227,7 @@ if __name__ == "__main__":
     for issue in old_issues:
         last_modification = max([i[1] for i in issue.history()])
         data = {'issue_id' : issue.id,
-                'issue_title' : issue_title,
+                'issue_title' : issue.title,
                 'issue_url' : get_issue_url(db, issue),
                 'days' : (now - last_modification).day,
         }
@@ -253,7 +253,7 @@ if __name__ == "__main__":
         deadline_in_the_past = now > issue.deadline
         missing_to_deadline = (now - issue.deadline)
         data = {'issue_id' : issue.id,
-                'issue_title' : issue_title,
+                'issue_title' : issue.title,
                 'issue_url' : get_issue_url(db, issue),
                 'days' : missing_to_deadline.day,
                 'deadline': issue.deadline.pretty('%Y-%m-%d')
