@@ -25,7 +25,9 @@ def add_keywords(db, cl, nodeid, newvalues):
                 if keyword_id in newvalues['keywords']:
                     newvalues['keywords'].remove(keyword_id)
             else:
-                newvalues['keywords'].append(db.keyword.lookup(keyword))
+                keyword_id = db.keyword.lookup(keyword)
+                if keyword_id not in newvalues['keywords']:
+                    newvalues['keywords'].append(db.keyword.lookup(keyword_id))
         except KeyError:
             # Key not found. Create one
             log.debug("add_keywords: creating new keyword %s" % keyword)
@@ -38,5 +40,5 @@ def add_keywords(db, cl, nodeid, newvalues):
 
 def init(db):
     db.issue.audit('create', add_keywords)
-    db.issue.audit('set', add_keywords)
+    db.issue.audit('set', add_keywords, priority=110)
 
