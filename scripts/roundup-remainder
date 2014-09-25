@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-# 
 # @(#)roundup-remainder
@@ -180,7 +181,7 @@ def send_message_for(db, send_to, subject, text, debug=False):
     msg = text
 
     try:
-        msg = unicode(msg).encode(charset)
+        msg = unicode(msg, encoding='utf-8').encode(charset)
     except UnicodeDecodeError as ex:
         print("Error converting text of email for `%s` with subject `%s`: `%s`" % (
             send_to, subject, ex))
