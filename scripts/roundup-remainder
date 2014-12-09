@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-# 
 # @(#)roundup-remainder
@@ -241,6 +240,7 @@ if __name__ == "__main__":
             data['send_to' ] = db.config.DISPATCHER_EMAIL
 
         subject="""[issue%s] Roundup reminder: issue "%s" needs an update""" % (issue.id, issue.title)
+
         text = (OLD_ISSUE_TEXT % data) + get_footer(db, issue)
         try:
             send_message_for(db, data['send_to'], subject, text, opts.debug)

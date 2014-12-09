@@ -9,7 +9,8 @@
 #   creator = Link('user')
 #   actor = Link('user')
 
-
+# regexp used by S3ITIssueClass
+import re
 
 
 # Topic
@@ -17,7 +18,8 @@ topic = Class(db, 'topic',
                   name=String(),
                   description=String(),
                   order=Number(),
-                  assign_to=Link('user'))
+                  assign_to=Link('user'),
+                  autonosy=Multilink('user'))
 topic.setkey('name')
 
 
@@ -37,10 +39,10 @@ status = Class(db, "status",
 status.setkey("name")
 
 # Keyword
-# keyword = Class(db, "keyword",
-#                 name=String(),
-#                 description=String())
-# keyword.setkey("name")
+keyword = Class(db, "keyword",
+                name=String(),
+                description=String())
+keyword.setkey("name")
 
 # Projects
 project = Class(db, "project",
@@ -83,7 +85,15 @@ msg = FileClass(db, "msg",
                 summary=String(),
                 files=Multilink("file"),
                 messageid=String(),
-                inreplyto=String())
+                inreplyto=String(),
+                mailcommands=String(),
+ )
+
+# mailcommands are commands parsed from the content of the message.
+# We need a separate field because the update of the message and issue
+# via email requires both an auditor and a detector, and we need to
+# pass information from one to the other.
+
 
 # File
 file = FileClass(db, "file",
@@ -97,17 +107,85 @@ file = FileClass(db, "file",
 #   files = Multilink("file")
 #   nosy = Multilink("user")
 #   superseder = Multilink("issue")
-issue = IssueClass(db, "issue",
+
+class S3ITIssueClass(IssueClass):
+    """This class overrides `generateChangeNote` and `generateCreateNote`.
+
+    It is way too hackish, but it's a quick and dirty solution to use
+    the real name of the users in the assignee and nosy fields, in the email we send.
+
+    Basically, we call the methods of the parent, and we *parse the
+    output*, replacing `username` with `realname (username)`
+    """
+
+    # Override generateChangeNote, to address S3IT issue384
+    def __fix_usernames_in_change_note(self, text):
+        lines = text.splitlines()
+        newlines = []
+        assignee_change_re = re.compile('assignee:\s+(?P<old>[^\s]+)\s+->\s+(?P<new>[^\s]+)')
+        assignee_create_re = re.compile('assignee:\s+(?P<old>[^\s]+)\s+')
+        nosy_re = re.compile('nosy:\s+(.*)')
+        for line in lines:
+            if assignee_change_re.match(line):
+                # Matches change in assignee
+                old, new = assignee_change_re.search(line).groups()
+                try:
+                    oldname = db.user.get(db.user.lookup(old), 'realname', old)
+                    newname = db.user.get(db.user.lookup(new), 'realname', new)
+                    newlines.append('assignee: {} ({}) -> {} ({})'.format(
+                        oldname, old, newname, new))
+                except KeyError:
+                    newlines.append(line)
+            elif assignee_create_re.match(line):
+                # Matches new assignee
+                assignee = assignee_create_re.search(line).group(1)
+                try:
+                    realname = db.user.get(db.user.lookup(assignee), 'realname', assignee)
+                    newlines.append('assignee: {} ({})'.format(
+                        assignee, realname))
+                except KeyError:
+                    newlines.append(line)
+            elif nosy_re.match(line):
+                # Matches changes in the nosy list
+                nosy = [i.strip() for i in nosy_re.search(line).group(1).split(',')]
+                newnosy = []
+                for user in nosy:
+                    username = user.strip('-+')
+                    prefix = user[0] if user[0] in '-+' else ''
+                    try:
+                        userid = db.user.lookup(username)
+                        realname = db.user.get(userid, 'realname', username)
+                        newnosy.append('{}{} ({})'.format(prefix, realname, username))
+                    except KeyError:
+                        newnosy.append(user)
+                # We also rename 'nosy' with 'subscribers'
+                newlines.append('subscribers: %s' % ', '.join(newnosy))
+            else:
+                newlines.append(line)
+        return '\n'.join(newlines)
+
+    def generateChangeNote(self, issueid, oldvalues):
+        m = IssueClass.generateChangeNote(self, issueid, oldvalues)
+        return self.__fix_usernames_in_change_note(m)
+
+    def generateCreateNote(self, issueid):
+        m = IssueClass.generateCreateNote(self, issueid)
+        return self.__fix_usernames_in_change_note(m)
+
+
+issue = S3ITIssueClass(db, "issue",
                    topics=Multilink('topic'),
                    priority=Link('priority'),
                    dependencies=Multilink('issue'),
                    assignee=Link('user'),
                    status=Link('status'),
                    superseder=Link('issue'),
-                   # keywords=Multilink('keyword'),
+                   keywords=Multilink('keyword'),
                    projects=Multilink('project'),
                    deadline=Date(),
                    public=Boolean(default_value=False),
+                   extra_keywords=String(),
+                   merged=Link("issue"),
 )
 
 
@@ -159,7 +237,7 @@ for klass in ['msg', 'file']:
 
 for cl in ('topic',
            'priority', 'status',
-           # 'keyword',
+           'keyword',
 ):
     db.security.addPermissionToRole('User', 'View', cl)
 
@@ -269,6 +347,10 @@ db.security.addPermissionToRole('User', p)
 p = db.security.addPermission(name='Search', klass='query')
 db.security.addPermissionToRole('User', p)
 
+# This search permission is needed to search issues.
+p = db.security.addPermission(name='Search', klass='issue')
+db.security.addPermissionToRole('User', p)
+
 p = db.security.addPermission(name='Edit', klass='query', check=edit_query,
     description="User is allowed to edit their queries")
 for r in 'User', 'Operator':
@@ -316,9 +398,9 @@ db.security.addPermissionToRole('Anonymous', 'Register', 'user')
 # [OPTIONAL]
 # Allow anonymous users access to create or edit "issue" items (and the
 # related file and message items)
-for cl in 'issue', 'file', 'msg':
-  db.security.addPermissionToRole('Anonymous', 'Create', cl)
-  db.security.addPermissionToRole('Anonymous', 'Edit', cl)
+#for cl in 'issue', 'file', 'msg':
+#   db.security.addPermissionToRole('Anonymous', 'Create', cl)
+#   db.security.addPermissionToRole('Anonymous', 'Edit', cl)
 
 
 # vim: set filetype=python sts=4 sw=4 et si :

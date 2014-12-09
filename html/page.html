@@ -21,13 +21,19 @@
     <link rel="stylesheet" href="@@file/github.css">
 
     <script tal:replace="structure request/base_javascript"></script>
-    <script src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <script src="@@file/jquery-1.8.3.min.js"></script>
+    <script src="@@file/jquery-ui.min.js"></script>
+    <script src="@@file/bootstrap.min.js"></script>
+    <link rel="stylesheet"
+       href="@@file/jquery-ui.css">
     <script>
       $(document).ready(function(){
       $('.dropdown-toggle').dropdown();
       $('.collapse').collapse();
       $('.control-label').popover();
+      });
+      $(function() {
+      $( ".datepicker input" ).datepicker({ dateFormat: 'yy-mm-dd'});
       });
     </script>
     <metal:x define-slot="more-javascript" />
@@ -36,7 +42,7 @@
        tal:define="kw_create python:request.user.hasPermission('Create', 'keyword');
                    issue_columns string:id,activity,title,creator,status,topics,deadline;
                    issue_columns_showall string:id,activity,title,creator,assignee,status,deadline,topics,projects;
-                   issue_status_notclosed string:-1,1,2,5;
+                   issue_status_notclosed string:-1,1,2,5,7;
                    is_operator python:request.user.hasRole('Operator');">
   <div class="navbar navbar-fixed-top">
     <div class='navbar-inner'>
@@ -73,6 +79,21 @@
                 tal:attributes="href python:request.indexargs_url('issue', {
                                     '@sort': '-activity',
                                     '@group': 'priority',
+                                    '@filter': 'status,creator',
+                                    '@columns': issue_columns_showall,
+                                    '@search_text': '',
+                                    'status': issue_status_notclosed,
+                                    'creator': request.user.id,
+                                    '@dispname': i18n.gettext('Show All'),
+                                    '@startwith': 0,
+                                    })"
+                    i18n:translate="">My issues</a>
+          </li>
+          <li>
+            <a href="#"
+                tal:attributes="href python:request.indexargs_url('issue', {
+                                    '@sort': '-activity',
+                                    '@group': 'priority',
                                     '@filter': 'status',
                                     '@columns': issue_columns_showall,
                                     '@search_text': '',
@@ -82,20 +103,6 @@
                                     })"
                     i18n:translate=""
                tal:condition="is_operator">Open issues</a>
-            <a href="#"
-                tal:attributes="href python:request.indexargs_url('issue', {
-                                    '@sort': '-activity',
-                                    '@group': 'priority',
-                                    '@filter': 'status,creator',
-                                    '@columns': issue_columns_showall,
-                                    '@search_text': '',
-                                    'status': issue_status_notclosed,
-                                    'creator': request.user.id,
-                                    '@dispname': i18n.gettext('Show All'),
-                                    '@startwith': 0,
-                                    })"
-                    i18n:translate=""
-               tal:condition="not: is_operator">My issues</a>
           </li>
           <li><a href="#"
                   tal:attributes="href python:request.indexargs_url('issue', {
@@ -114,7 +121,7 @@
           <li><a href="issue" i18n:translate="" tal:condition="is_operator">All Issues</a>
           </li>
           <li>
-            <a href="" tal:attributes="href string:issue?@template=search&status=${issue_status_notclosed}" i18n:translate="">Search in open issues</a>
+            <a href="" tal:attributes="href string:issue?@template=search&status=${issue_status_notclosed}" i18n:translate="">Search issues</a>
           </li>
           <tal:comment condition="nothing">
           <li>
@@ -224,9 +231,9 @@
              <li tal:condition="python:request.user.hasPermission('Create', 'user')">
               <a href="user?@template=item" i18n:translate="">Add User</a>
              </li>
-             <!-- <li tal:condition="python:request.user.hasPermission('Edit', 'keyword')"> -->
-             <!--  <a href="keyword" i18n:translate="">Edit Keywords</a> -->
-             <!-- </li> -->
+             <li tal:condition="python:request.user.hasPermission('Edit', 'keyword')">
+              <a href="keyword" i18n:translate="">Edit Keywords</a>
+             </li>
             </ul>
            </li>
           </ul>
@@ -310,27 +317,27 @@ See issue.search.html in the classic template for examples.
   </select>
 </td>
 
-<!-- <td metal:define-macro="search_select_keywords"> -->
-<!--   <div tal:attributes="id python:'''keywords_%s'''%name"> -->
-<!--   <select tal:attributes="name name; id name" -->
-<!--           tal:define="value python:request.form.getvalue(name)"> -->
-<!--     <option value="" i18n:translate="">don't care</option> -->
-<!--     <metal:slot define-slot="extra_options" /> -->
-<!--     <option value="" i18n:translate="" disabled="disabled">------------</option> -->
-<!--     <option tal:repeat="s python:db[db_klass].list()" -->
-<!--             tal:attributes="value s/id; selected python:value == s.id" -->
-<!--             tal:content="python:s[db_content]"></option> -->
-<!--   </select> -->
-<!--   <a class="classhelp" -->
-<!-- 	 tal:attributes="href python:'''javascript:help_window('%s?@template=keywords_expr&property=%s&form=itemSynopsis', 300, 200)'''%(request.classname, name)">(edit)</a> -->
-<!--   </div> -->
-<!-- </td> -->
+<td metal:define-macro="search_select_keywords">
+  <div tal:attributes="id python:'''keywords_%s'''%name">
+  <select multiple tal:attributes="name name; id name"
+          tal:define="value python:request.form.getvalue(name)">
+    <option value="" i18n:translate="">don't care</option>
+    <metal:slot define-slot="extra_options" />
+    <option value="" i18n:translate="" disabled="disabled">------------</option>
+    <option tal:repeat="s python:db[db_klass].list()"
+            tal:attributes="value s/id; selected python:value == s.id"
+            tal:content="python:s[db_content]"></option>
+  </select>
+  <a class="classhelp"
+     tal:attributes="href python:'''javascript:help_window('%s?@template=keywords_expr&property=%s&form=itemSynopsis', 300, 200)'''%(request.classname, name)">(edit)</a>
+  </div>
+</td>
 
 <!-- like search_select, but translates the further values.
 Could extend it (METAL 1.1 attribute "extend-macro")
 -->
 <td metal:define-macro="search_select_translated">
-  <select tal:attributes="name name; id name"
+  <select multiple tal:attributes="name name; id name"
           tal:define="value python:request.form.getvalue(name)">
     <option value="" i18n:translate="">don't care</option>
     <metal:slot define-slot="extra_options" />
