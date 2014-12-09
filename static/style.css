@@ -13,6 +13,7 @@ h1 {
 }
 
 .issue div .content {
+    background-color: #F8F8F8;
     border: #A8A8A8 solid 1px;
     padding: 1em 1em 0em 1em;
     margin-bottom: 1em;
@@ -27,70 +28,3 @@ h1 {
 /* Fix collapsible boxes */
 .collapse { margin-right: -1em; }
 .rblabel { margin-right: 1em; }
-
-/* Colors for issues */
-.statusblock { 
-    /* padding:8px 35px 8px 14px; */
-    margin-bottom:20px;
-    padding:6px 12px 6px 12px;
-    /* text-shadow:0 1px 0 rgba(255,255,255,0.5); */
-    -webkit-border-radius:4px;
-    -moz-border-radius:4px;
-    border-radius:4px;
-}
-h3 .statusblock {
-    font-size:70%;
-}
-
-.statusinline { 
-    padding: 1px 4px 1px 4px;
-    /* margin-bottom:20px; */
-    /* text-shadow:0 1px 0 rgba(255,255,255,0.5); */
-    -webkit-border-radius:4px;
-    -moz-border-radius:4px;
-    border-radius:4px;
-    white-space: nowrap;
-}
-
-.status-new { 
-    /* soft red */
-    color: #fff;
-    background-color: #d9534f;
-    border: 1px solid #d43f3a;
-}
-.status-in-progress {
-    /* dark gold */
-    color: #fff;
-    background-color:#f0ad4e;
-    border:1px solid #eea236;
-}
-.status-invalid {
-    /* purple */
-    color: #fff;
-    background-color: #984fd9;
-    border: 1px solid #7f2cc9;
-}
-.status-on-hold {
-    /* blue */
-    color: #fff;
-    background-color: #428bca;
-    border: 1px solid #357ebd;
-    /* grey */
-}
-.status-solved {
-    color: #fff;
-    background-color: #5cb85c;
-    border: 1px solid #4cae4c;
-}
-.status-waiting {
-    /* grey */
-    color: #fff;
-    background-color: #31b0d5;
-    border: 1px solid #46b8da;
-}
-.status-wontfix {
-    /* purple */
-    color: #fff;
-    background-color: #534fd9;
-    border: 1px solid #5b57e1;
-}

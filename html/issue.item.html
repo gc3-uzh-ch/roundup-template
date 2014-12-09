@@ -28,20 +28,6 @@
 <div metal:fill-slot="content"
     tal:define="is_operator python:request.user.hasRole('Operator');" >
 
-  <p class="alert alert-error"
-     tal:condition="context/merged"> Issue has been merged with
-    <a tal:attributes="href string:issue${context/merged/id}"
-    tal:content="string:issue${context/merged/id}:
-    ${context/merged/title}" />. Further updates should be performed
-    there.
-  </p>
-
-  <p class="alert alert-error" tal:condition="context/is_retired|nothing">This
-  issue has been <i>retired</i>. Further changes are not possible on
-  this issue.
-  </p>
-     
-
   <p tal:condition="python:not (context.is_view_ok()
    or request.user.hasRole('Anonymous'))" i18n:translate="" class='alert alert-error'>
    You are not allowed to view this page.</p>
@@ -53,13 +39,17 @@
   <div tal:condition="context/is_view_ok">
     
     <!-- messages -->
-    <h3 tal:condition="context/id">
-      <span tal:define="status_class python:'status-'+context.status.plain().replace(' ','-');"
-            tal:attributes="class string:statusblock ${status_class}"
-            tal:content="context/status/plain" />
-      Issue<span tal:content="context/id" />: <span tal:content="structure
+    <h3 tal:condition="context/id">Issue
+    <span tal:content="context/id" />: <span tal:content="structure
     context/title/plain" /></h3>
-
+    <h4 tal:condition="context/id|nothing"
+        tal:define="status context/status/plain;
+                    status_success python:'alert-success' if status=='solved' else '';
+                    status_error python:'alert-error' if status in ['invalid', 'wontfix'] else ''"
+        tal:attributes="class string:alert ${status_success} ${status_error}">
+      <span tal:omit-tag="true" i18n:translate="">Status:</span>
+      <span tal:replace="status" />
+    </h4>
 
     <div class='container-fluid' tal:condition="context/messages">
       <!-- <h3 i18n:translate="">Messages</h3> -->
@@ -201,7 +191,7 @@
             <dl class='dl-horizontal span6'>
               <dt i18n:translate="">Status</dt>
               <dd tal:content="structure context/status/plain"></dd>
-              <tal:block condition="python: 0 and is_operator">
+              <tal:block condition="is_operator">
                 <dt i18n:translate="">Dependencies</dt>
                 <dd tal:content="structure context/dependencies/plain"></dd>
                 <dt i18n:translate="">Link with</dt>
@@ -252,7 +242,7 @@
           </div> <!-- row-fluid -->
 
           <div class='row-fluid' tal:condition="context/id">
-            <tal:block condition="python: 0 and is_operator">
+            <tal:block condition="is_operator">
               <!-- Dependencies -->
               <div class='control-group span6'>
               <label class="control-label" data-toggle="popover"
@@ -345,12 +335,9 @@
                 data-content="When this issue *must* be solved.">
                 <tal:block i18n:translate="">Deadline</tal:block>
               </label>
-              <div class="controls datepicker" tal:content="structure
-              python:context.deadline.field(format='%Y-%m-%d',
-              popcal=False)" />             
+              <div class="controls" tal:content="structure python:context.deadline.field(format='%Y-%m-%d')" />
             </div>
 
-            <!-- Is public? -->
             <div class="control-group span6">
               <label class='control-label' data-toggle="popover"
                 data-placement="right"
@@ -362,7 +349,6 @@
           </div> <!-- row-fluid -->
 
           <div class="row-fluid" tal:condition="is_operator">
-            <!-- Projects -->
             <div class="control-group span6">
               <label class="control-label" data-toggle="popover"
                      data-placement="bottom"
@@ -373,26 +359,14 @@
               <div class="controls" tal:content="structure
               context/projects/menu">projects field</div>
             </div>
-            <!-- Keywords -->
-            <div class="control-group span6">
-              <label class="control-label"
-                     data-toggle="popover"
-                     data-placement="right"
-                     data-content="Keywords are usually used for
-                     reporting purposes.">Keywords:</label>
-              <div class="controls" tal:content="structure
-              python:context['keywords'].menu(height=5)">keywords</div>
-
-              <label class="control-label"
-                     data-toggle="popover"
-                     data-placement="top"
-                     data-content="A comma-separated list of keywords
-                     you want to add, both to this issue *and* to
-                     the list of available keywords.">Additional keywords:</label>
-              <div class="controls" tal:content="structure context/extra_keywords/field">projects field</div>
-            </div>
-
           </div>
+            <!-- Keywords -->
+            <!-- <div class='control-group span6'> -->
+            <!--   <label class='control-label' i18n:translate="">Keywords:</label> -->
+            <!--   <div class='controls'> -->
+            <!--     <span tal:content="structure python:context['keywords'].menu(height=5)">keywords</span> -->
+            <!--   </div> -->
+            <!-- </div> -->
 
         </div> <!-- container-fluid -->
       </fieldset>
@@ -405,58 +379,6 @@
         <!--  i18n:translate="" class='btn'>Make a copy</a> -->
       </div>
     </form>
-
-    <!-- BEGIN merging form -->
-    <tal:if condition="python:context.is_edit_ok() and is_operator">
-      <form tal:condition="not:context/merged"
-            class="additional"
-            method="POST"
-            name="mergeForm">
-        <div class='container-fluid control-group span12'>
-          <div class='span3'>
-            <input type="hidden" name="@action" value="merge">
-            <label class="control-label"
-                   data-toggle="popover"
-                   data-placement="top"
-                   data-content="Insert the ID of an issue.
-                                 This isssue will be *retired*, and further changes forbidden."
-                   for="target_issue" i18n:translate="">Merge into</label>
-            <input type="text" id="target_issue" name="target_issue"
-                   size="5">
-            <!-- Issue list not working at the moment -->
-            <!-- <span tal:contition="python:0" -->
-                       <!--       tal:replace="structure python:db.issue.classhelp('id,title', property='merged', inputtype='radio', form='mergeForm')" /> -->
-                       <br />
-                       <input type="submit" value="  Merge  "
-                              i18n:attributes="value">
-          </div>
-        </div>
-      </form>
-     </tal:if>
-    <!-- END merging form -->
-
-    <!-- BEGIN unmerging form -->
-    <tal:if condition="python:context.is_edit_ok() and is_operator">
-      <form tal:condition="context/merged"
-            class="additional"
-            method="POST"
-            name="unmergeForm">
-        <div class='container-fluid control-group'>
-            <p>Issue currently retired and merged with
-              <a tal:attributes="href string:issue${context/merged/id}"
-                 tal:content="string:issue${context/merged/id}:
-                              ${context/merged/title}" /></p>
-            <p>Click the <i>Unmerge</i> button to restore the issue
-            and undo the merging</p>
-            <input type="hidden" name="@action" value="unmerge">
-            <!-- Issue list not working at the moment -->
-            <!-- <span tal:contition="python:0" -->
-            <!--       tal:replace="structure python:db.issue.classhelp('id,title', property='merged', inputtype='radio', form='mergeForm')" /> -->
-            <input type="submit" value="  Unmerge  " i18n:attributes="value">
-        </div>
-      </form>
-    </tal:if>
-    <!-- END unmerging form -->
 
     <p tal:condition="context/id" i18n:translate="">
      Created on <b><tal:x replace="python:context.creation.pretty('%Y-%m-%d %H:%M')" i18n:name="creation" /></b>
@@ -506,4 +428,3 @@
 </div> <!-- content -->
 
 </tal:block>
-<!-- SHA: 2062c26eea817319014e013855d4574840cd784c -->
