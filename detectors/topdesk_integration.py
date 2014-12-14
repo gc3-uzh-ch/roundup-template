@@ -25,7 +25,7 @@ __author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
 
 import re
 from roundup import roundupdb
-from roundup.mailer import SMTPConnection
+from roundup.mailer import Mailer
 
 re_forwarded = re.compile(
     r'Forwarding Incident (I-[0-9]+-[0-9]+) from TOPdesk@UZH:', re.I)
@@ -36,7 +36,10 @@ Subject: %(mail_subject)s
 
 Dear %(username)s,
 
-Your ticket has been transferred from TOPDesk to RoundUp: 
+The ticket you opened on TOPDesk (ticket number %(topdeskid)s) has
+been transferred to RoundUp, the ticketing system of S3IT.
+
+You can access the ticket via web using the following URL:
 
     %(issue_url)s
 
@@ -100,10 +103,10 @@ def topdesk_integration(db, cl, nodeid, oldvalues):
         # Send a reply to support@id.uzh.ch
 
         # Get the URL of the roundup issue
-        base = self.db.config.TRACKER_WEB
+        base = db.config.TRACKER_WEB
         if not base.endswith('/'):
             base = base + '/'
-        issue_url = base + cl.classname + issueid
+        issue_url = base + cl.classname + nodeid
 
         # Get the requestor name
         userid = cl.get(nodeid, 'creator')
@@ -116,11 +119,11 @@ def topdesk_integration(db, cl, nodeid, oldvalues):
         mail_from = 'help@s3it.uzh.ch'
 
         # Mail to is fixed
-        mail_to = 'support@id.uzh.ch'
+        mail_to = 'topdesk-support@id.uzh.ch'
 
         # Subject is took from the original subject, that is now the
         # title of the issue
-        mail_subject = cl.get(nodeid, 'title')
+        mail_subject = 'Re: ' + cl.get(nodeid, 'title')
 
         # Build the reply message.
         # Please note that this message will be sent from TOPDesk to the user
@@ -132,11 +135,12 @@ def topdesk_integration(db, cl, nodeid, oldvalues):
             'username': username,
             'issue_url': issue_url,
             'message': message,
+            'topdeskid': topdesk_id,
         }
 
         try:
-            smtp = SMTPConnection(db.config)
-            smtp.smtp_send(mail_to, mail_body, sender=mail_from)
+            mailer = Mailer(db.config)
+            mailer.smtp_send([mail_to], mail_body, sender=mail_from)
         except Exception as ex:
             raise roundupdb.DetectorError(
                 "Error sending reply message for TOPDesk issue %s "
