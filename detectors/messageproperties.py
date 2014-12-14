@@ -257,5 +257,3 @@ def init(db):
     db.issue.audit('create', issue_properties_updater)
     db.issue.audit('set', issue_properties_updater)
 
-# vim: set filetype=python ts=4 sw=4 et si
-#SHA: 4dc3c37fa69612010a9684a544585aabe836bf35
