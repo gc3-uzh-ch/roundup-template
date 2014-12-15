@@ -1,0 +1,509 @@
+<tal:block metal:use-macro="templates/page/macros/frame">
+  <title metal:fill-slot="head_title">
+    <tal:block condition="context/id" i18n:translate="">Issue
+    <span tal:replace="context/id" i18n:name="id"/>:
+    <span tal:replace="context/title" i18n:name="title"/> -
+    <span tal:replace="config/TRACKER_NAME"
+    i18n:name="tracker"/></tal:block>
+    <tal:block condition="not:context/id" i18n:translate="">New Issue
+      - <span tal:replace="config/TRACKER_NAME" i18n:name="tracker"/>
+    </tal:block>
+  </title>
+  <tal:block metal:fill-slot="body_title">
+    <span tal:condition="python: not (context.id or
+          context.is_edit_ok())" tal:omit-tag="python:1"
+          i18n:translate="">New Issue</span>
+    <span tal:condition="python: not context.id and context.is_edit_ok()"
+          tal:omit-tag="python:1" i18n:translate="">Creating New Issue</span>
+    <span tal:condition="python: context.id and not
+          context.is_edit_ok()" tal:omit-tag="python:1"
+          i18n:translate="">Issue <tal:x replace="context/id"
+          i18n:name="id" /></span>
+    <span tal:condition="python: context.id and context.is_edit_ok()"
+          tal:omit-tag="python:1" i18n:translate="">Editing Issue
+          <tal:x replace="context/id" i18n:name="id" /></span>
+  </tal:block>
+
+
+<div metal:fill-slot="content"
+    tal:define="is_operator python:request.user.hasRole('Operator');" >
+
+  <p class="alert alert-error"
+     tal:condition="context/merged"> Issue has been merged with
+    <a tal:attributes="href string:issue${context/merged/id}"
+    tal:content="string:issue${context/merged/id}:
+    ${context/merged/title}" />. Further updates should be performed
+    there.
+  </p>
+
+  <p class="alert alert-error" tal:condition="context/is_retired|nothing">This
+  issue has been <i>retired</i>. Further changes are not possible on
+  this issue.
+  </p>
+     
+
+  <p tal:condition="python:not (context.is_view_ok()
+   or request.user.hasRole('Anonymous'))" i18n:translate="" class='alert alert-error'>
+   You are not allowed to view this page.</p>
+
+  <p tal:condition="python:not context.is_view_ok()
+   and request.user.hasRole('Anonymous')" i18n:translate="" class='alert alert-error'>
+   Please login with your <a href="http://www.id.uzh.ch/dl/admin/itim/shortname.html">UZH shortname</a> and "webpass".</p>
+
+  <div tal:condition="context/is_view_ok">
+    
+    <!-- messages -->
+    <h3 tal:condition="context/id">
+      <span tal:define="status_class python:'status-'+context.status.plain().replace(' ','-');"
+            tal:attributes="class string:statusblock ${status_class}"
+            tal:content="context/status/plain" />
+      Issue<span tal:content="context/id" />: <span tal:content="structure
+    context/title/plain" /></h3>
+
+
+    <div class='container-fluid' tal:condition="context/messages">
+      <!-- <h3 i18n:translate="">Messages</h3> -->
+      <tal:block tal:repeat="msg context/messages">
+        <div class='row-fluid'>
+          <div class='span1' tal:condition="is_operator">
+            <a tal:attributes="href string:msg${msg/id}"
+              i18n:translate="">msg<tal:x replace="msg/id" i18n:name="id" /></a>
+          </div>
+          <div class='span7'>
+            <span i18n:translate="">Author: <tal:x replace="python:msg.author.realname.plain()"
+              i18n:name="author" />
+              (<tal:x replace="msg/author"/>)</span>
+          </div>
+            <div class='span3'>
+            <span i18n:translate="">Date: <tal:x replace="python:msg.date.pretty('%Y-%m-%d %H:%M')"
+              i18n:name="date" /></span>
+          </div>
+        </div>
+        <div class='row-fluid'>
+          <div class="content">
+            <pre tal:condition="python:msg.content.is_view_ok()"
+               tal:replace="structure python:utils.markdown(msg.content.plain())">content</pre>
+          </div>
+
+          <tal:block tal:condition="python: [i for i in msg.files if
+               i.id in context.files]">
+            <h5>Attachments</h5>
+            <ul>
+              <tal:block tal:repeat="file msg/files">
+                <li tal:condition="python: file.id in context.files">
+                  <a tal:attributes="href file/download_url"
+                     tal:content="file/name">dld link</a>
+                  <span tal:condition="file/description"
+                     tal:content="string: (${file/description})" />
+                </li>
+              </tal:block>
+            </ul>
+          </tal:block>
+        </div>
+      </tal:block>
+    </div>
+    <!-- /messages -->
+
+    <form method="POST" name="itemSynopsis" class='form-horizontal'
+        onSubmit="return submit_once()" enctype="multipart/form-data"
+        tal:attributes="action context/designator">
+
+      <fieldset>
+        <div class='container-fluid' tal:condition="not:context/is_edit_ok">
+          <dl class='dl-horizontal'>
+            <dt i18n:translate="">Title</dt>
+            <dd tal:content="structure context/title/plain"></dd>
+            <dt i18n:translate="">Type</dt>
+            <dd tal:content="structure context/type/plain"></dd>
+            <dt i18n:translate="">Topics</dt>
+            <dd tal:content="structure context/topics/plain"></dd>
+          </dl>
+        </div>
+        <div class='container-fluid' tal:condition="context/is_edit_ok">
+          <legend tal:condition="context/id">Update the issue</legend>
+          <!-- TITLE -->
+          <div class='control-group vspace-two' tal:condition="context/title/is_edit_ok">
+            <label class='control-label'  for='issue_title' i18n:translate="">Title</label>
+            <div class='controls'>
+              <input class='input-xxlarge' type='text' name='title' id='issue_title' tal:attributes="value context/title">
+            </div>
+          </div>
+
+          <div class='row-fluid vspace-two'></div>
+
+          <div class='row-fluid'>
+            <!-- Topics -->
+            <div class='control-group span6'>
+              <label class='control-label' for='issue_topics'
+                    tal:condition="context/topics/is_edit_ok" i18n:translate="">
+                <span tal:condition="context/topics/is_edit_ok" 
+                    tal:replace="structure python:db.topic.classhelp('id,name,description',property='topics',label='Topics')" />
+              </label>
+              <label class='control-label' for='issue_topics'
+                  tal:condition="not:context/topics/is_edit_ok" i18n:translate="">Topics</label>
+              <div class='controls' tal:content="structure context/topics/menu">
+                <!-- ; -->
+              </div>
+            </div>
+          </div> <!-- row-fluid -->
+
+          <!-- and finally, allow people to say something important -->
+          <div class='row-fluid'>
+            <div class='control-group'>
+              <label class='control-label'>
+                <tal:block i18n:translate="">
+                  <span class='badge badge-inverse'>Comment</span>
+                  &nbsp;
+                </tal:block>
+              </label>
+              <textarea tal:content="request/form/@note/value | default"
+                      name="@note" rows="6" class='input-xxlarge'></textarea>
+            </div>
+          </div> <!-- row-fluid -->
+
+          <!-- upload file -->
+          <div class='row-fluid'>
+            <div class='control-group'>
+              <label class='control-label'>
+                <tal:block i18n:translate="">File</tal:block>
+              </label>
+              <div class='controls'>
+                <input type="hidden" name="@link@files" value="file-1">
+                <input type="file" name="file-1@content" class='input-xlarge'>
+              </div>
+            </div>
+          </div> <!-- row-fluid -->
+
+          <!-- file description -->
+          <div class='row-fluid'>
+            <div class='control-group'>
+              <label class='control-label'>
+                <tal:block i18n:translate="">File Description</tal:block>
+              </label>
+              <div class='controls'>
+                <input type="edit" name="file-1@description">
+              </div>
+            </div>
+          </div> <!-- row-fluid -->
+          <tal:comment condition="nothing">
+          <!-- submit button replicated here for convenience -->
+          <input type="submit" name="submit_button" value="Submit Changes"/>
+          </tal:comment>
+        </div> <!-- container-fluid -->
+      </fieldset>
+
+      <fieldset id="fieldset-extrainfo">
+        <legend>
+          <button type="button" class="btn btn-default" data-toggle="collapse"
+        data-target="#item-extrainfo">Extra information <span class="caret"></span></button></legend>
+        <div id="item-extrainfo" class='container-fluid collapse in' tal:condition="not:context/is_edit_ok">
+          <div class='row-fluid'>
+            <dl class='dl-horizontal span6'>
+              <dt i18n:translate="">Status</dt>
+              <dd tal:content="structure context/status/plain"></dd>
+              <tal:block condition="python: 0 and is_operator">
+                <dt i18n:translate="">Dependencies</dt>
+                <dd tal:content="structure context/dependencies/plain"></dd>
+                <dt i18n:translate="">Link with</dt>
+                <dd tal:content="structure context/superseder/plain"></dd>
+              </tal:block>
+            </dl>
+            <dl class='dl-horizontal span6'>
+              <dt i18n:translate="">Assigned to</dt>
+              <dd tal:content="structure context/assignee/plain"></dd>
+              <dt i18n:translate="">Subscribers</dt>
+              <dd tal:content="structure context/nosy/plain"></dd>
+              <dt i18n:translate="">Priority</dt>
+              <dd tal:content="structure context/priority/plain"></dd>
+              <!-- <dt i18n:translate="">Keywords</dt> -->
+              <!-- <dd tal:content="structure context/keywords/plain"></dd> -->
+            </dl>
+          </div>
+        </div>
+        <div id="item-extrainfo" class='container-fluid collapse in' tal:condition="context/is_edit_ok">
+          <div class='row-fluid vspace-two'></div>
+          <div class='row-fluid' tal:condition="context/id">
+            <!-- Status -->
+            <div class='control-group span6'>
+              <label class='control-label' for='process_status'
+                    tal:condition="context/status/is_edit_ok" i18n:translate="">
+                <span tal:condition="context/status/is_edit_ok" 
+                    tal:replace="structure python:db.status.classhelp('id,name,description',property='status', label='Status')" />
+              </label>
+              <label class='control-label' for='process_status'
+                  tal:condition="not:context/status/is_edit_ok" i18n:translate="">Status</label>
+              <div class='controls' tal:content="structure context/status/menu">
+                <!-- ; -->
+              </div>
+            </div>
+            <!-- Priority -->
+            <div class='control-group span6'>
+              <label class='control-label' for='process_priority'
+                    tal:condition="context/priority/is_edit_ok" i18n:translate="">
+                <span tal:condition="context/priority/is_edit_ok" 
+                    tal:replace="structure python:db.priority.classhelp('id,name,description',property='priority',label='Priority')" />
+              </label>
+              <label class='control-label' for='process_priority'
+                  tal:condition="not:context/priority/is_edit_ok" i18n:translate="">Priority</label>
+              <div class='controls' tal:content="structure context/priority/menu">
+                <!-- ; -->
+              </div>
+            </div>
+          </div> <!-- row-fluid -->
+
+          <div class='row-fluid' tal:condition="context/id">
+            <tal:block condition="python: 0 and is_operator">
+              <!-- Dependencies -->
+              <div class='control-group span6'>
+              <label class="control-label" data-toggle="popover"
+                     data-placement="right"
+                     data-content="Comma separated list of issue IDs
+                     this issue depends on.">
+                <tal:block i18n:translate="">Dependencies</tal:block>:
+                <span tal:condition="context/dependencies/is_edit_ok"
+                      tal:replace="structure python:db.issue.classhelp('id,title,status', filter='status=-1,1,2,5', property='dependencies')" />
+                </label>
+                <div class='controls'>
+                  <span tal:replace="structure python:context.dependencies.field(showid=1,size=20)" />
+                  <span tal:condition="context/dependencies" tal:repeat="d python:context.dependencies.sorted('creation')">
+                    View: <a tal:attributes="href string:issue${d/id}" tal:content="d/id"></a>
+                  </span>
+                </div>
+              </div>
+              <!-- Superseder -->
+              <div class='control-group span6'>
+                <label class='control-label' data-target="popover"
+                       data-placement="bottom"
+                       data-content="Comma separated list of issue IDs
+                       related to the current issue.">Link with</label>
+                <!-- FIXME
+                <tal:block i18n:translate="">Superseder</tal:block>:
+                <span tal:condition="context/superseder/is_edit_ok"
+                      tal:replace="structure python:db.issue.classhelp('id,title', filter='status=0,1', property='superseder')" />
+                -->
+                <div class='controls'>
+                  <span tal:replace="structure python:context.superseder.field(showid=1, size=20)" />
+                  <span tal:condition="context/superseder">
+                    <span i18n:translate="">View</span>:
+                    <a tal:content="context/superseder/id"
+                       tal:attributes="href string:issue${context/superseder/id}; title context/superseder/title;"></a> 
+                  </span> 
+                </div>
+              </div>
+            </tal:block>
+          </div> <!-- row-fluid -->
+
+          <div class='row-fluid'>
+            <!-- Assignee -->
+            <div class='control-group span6'>
+              <label class='control-label' data-toggle="popover"
+                data-placement="right"
+                data-content="Operator who is responsible to solve the
+                issue.">
+                <tal:block i18n:translate="">Assigned To</tal:block>
+              </label>
+              <div class="controls">
+                <select name="assignee" tal:condition="is_operator">
+                  <option value="-1">- no selection -</option>
+                  <tal:block tal:repeat="user db/user/list">
+                    <option tal:condition="python:user.hasRole('Operator')"
+                            tal:attributes="value user/id;
+                                            selected python:user.id == context.assignee"
+                            tal:content="string: ${user/username} (${user/realname})"></option>
+                  </tal:block>
+                </select>
+                  <tal:block tal:repeat="user db/user/list" tal:condition="not: context/assignee/is_edit_ok">
+                    <span tal:replace="string:${context/assignee}
+                    (${user/realname})" tal:condition="python:
+                    user.id==context.assignee"/>
+                    </tal:block>
+              </div>
+            </div>
+            <!-- Nosy list -->
+            <div class='control-group span6'>
+              <label class="control-label" data-toggle="popover"
+                     data-placement="bottom" data-content="A list of
+                     usernames that will be notified via email every
+                     time this issue is updated." for='nosy'>
+                <tal:block i18n:translate="">Subscribers</tal:block>
+              </label>
+
+              <div class='controls'>
+                <span tal:condition="context/nosy/is_edit_ok"
+                    tal:replace="structure python:db.user.classhelp('username,realname,address', property='nosy')" />
+                <span tal:replace="structure context/nosy/field" />
+              </div>
+            </div>
+          </div> <!-- row-fluid -->
+
+
+          <div class='row-fluid' tal:condition="is_operator">
+            <!-- Deadline -->
+            <div class='control-group span6'>
+              <label class='control-label' data-toggle="popover"
+                data-placement="right"
+                data-content="When this issue *must* be solved.">
+                <tal:block i18n:translate="">Deadline</tal:block>
+              </label>
+              <div class="controls datepicker" tal:content="structure
+              python:context.deadline.field(format='%Y-%m-%d',
+              popcal=False)" />             
+            </div>
+
+            <!-- Is public? -->
+            <div class="control-group span6">
+              <label class='control-label' data-toggle="popover"
+                data-placement="right"
+                data-content="Is this issue public?.">
+                <tal:block i18n:translate="">Public</tal:block>
+              </label>
+              <div class="controls form-inline" tal:content="structure context/public/field" />
+            </div>
+          </div> <!-- row-fluid -->
+
+          <div class="row-fluid" tal:condition="is_operator">
+            <!-- Projects -->
+            <div class="control-group span6">
+              <label class="control-label" data-toggle="popover"
+                     data-placement="bottom"
+                     data-content="Select one or mor projects this
+                     issue belong to">
+                Projects
+              </label>
+              <div class="controls" tal:content="structure
+              context/projects/menu">projects field</div>
+            </div>
+            <!-- Keywords -->
+            <div class="control-group span6">
+              <label class="control-label"
+                     data-toggle="popover"
+                     data-placement="right"
+                     data-content="Keywords are usually used for
+                     reporting purposes.">Keywords:</label>
+              <div class="controls" tal:content="structure
+              python:context['keywords'].menu(height=5)">keywords</div>
+
+              <label class="control-label"
+                     data-toggle="popover"
+                     data-placement="top"
+                     data-content="A comma-separated list of keywords
+                     you want to add, both to this issue *and* to
+                     the list of available keywords.">Additional keywords:</label>
+              <div class="controls" tal:content="structure context/extra_keywords/field">projects field</div>
+            </div>
+
+          </div>
+
+        </div> <!-- container-fluid -->
+      </fieldset>
+
+      <div class="form-actions" tal:condition="context/is_edit_ok">
+        <input type="hidden" name="@template" value="item">
+        <input type="hidden" name="@required" value="title">
+        <span tal:replace="structure context/submit">submit button</span>
+        <!-- <a tal:condition="context/id" tal:attributes="href context/copy_url" -->
+        <!--  i18n:translate="" class='btn'>Make a copy</a> -->
+      </div>
+    </form>
+
+    <!-- BEGIN merging form -->
+    <tal:if condition="python:context.is_edit_ok() and is_operator">
+      <form tal:condition="not:context/merged"
+            class="additional"
+            method="POST"
+            name="mergeForm">
+        <div class='container-fluid control-group span12'>
+          <div class='span3'>
+            <input type="hidden" name="@action" value="merge">
+            <label class="control-label"
+                   data-toggle="popover"
+                   data-placement="top"
+                   data-content="Insert the ID of an issue.
+                                 This isssue will be *retired*, and further changes forbidden."
+                   for="target_issue" i18n:translate="">Merge into</label>
+            <input type="text" id="target_issue" name="target_issue"
+                   size="5">
+            <!-- Issue list not working at the moment -->
+            <!-- <span tal:contition="python:0" -->
+                       <!--       tal:replace="structure python:db.issue.classhelp('id,title', property='merged', inputtype='radio', form='mergeForm')" /> -->
+                       <br />
+                       <input type="submit" value="  Merge  "
+                              i18n:attributes="value">
+          </div>
+        </div>
+      </form>
+     </tal:if>
+    <!-- END merging form -->
+
+    <!-- BEGIN unmerging form -->
+    <tal:if condition="python:context.is_edit_ok() and is_operator">
+      <form tal:condition="context/merged"
+            class="additional"
+            method="POST"
+            name="unmergeForm">
+        <div class='container-fluid control-group'>
+            <p>Issue currently retired and merged with
+              <a tal:attributes="href string:issue${context/merged/id}"
+                 tal:content="string:issue${context/merged/id}:
+                              ${context/merged/title}" /></p>
+            <p>Click the <i>Unmerge</i> button to restore the issue
+            and undo the merging</p>
+            <input type="hidden" name="@action" value="unmerge">
+            <!-- Issue list not working at the moment -->
+            <!-- <span tal:contition="python:0" -->
+            <!--       tal:replace="structure python:db.issue.classhelp('id,title', property='merged', inputtype='radio', form='mergeForm')" /> -->
+            <input type="submit" value="  Unmerge  " i18n:attributes="value">
+        </div>
+      </form>
+    </tal:if>
+    <!-- END unmerging form -->
+
+    <p tal:condition="context/id" i18n:translate="">
+     Created on <b><tal:x replace="python:context.creation.pretty('%Y-%m-%d %H:%M')" i18n:name="creation" /></b>
+     by <b><tal:x replace="context/creator" i18n:name="creator" /></b>,
+     last changed <b><tal:x replace="python:context.activity.pretty('%Y-%m-%d %H:%M')" i18n:name="activity" /></b>
+     by <b><tal:x replace="context/actor" i18n:name="actor" /></b>.
+    </p>
+
+    <table class="table table-condensed table-bordered vspace-two" tal:condition="context/files">
+      <thead>
+        <tr>
+          <th i18n:translate="">File name</th>
+          <th i18n:translate="">Uploaded</th>
+          <th i18n:translate="">Description</th>
+          <th i18n:translate="">Edit</th>
+          <th i18n:translate="">Remove</th>
+        </tr>
+      </thead>
+      <tr tal:repeat="file python:context.files.sorted('creation')">
+        <td>
+          <a tal:attributes="href file/download_url"
+              tal:content="file/name">dld link</a>
+        </td>
+        <td>
+          <span tal:content="file/creator">creator's name</span>,
+          <span tal:content="python:file.creation.pretty('%Y-%m-%d %H:%M')">creation date</span>
+        </td>
+        <td tal:content="file/description" />
+        <td><a tal:condition="file/is_edit_ok"
+              tal:attributes="href string:file${file/id}">edit</a>
+        </td>
+        <td>
+          <form style="padding:0" tal:condition="file/is_edit_ok"
+             tal:attributes="action string:issue${context/id}" method="POST">
+              <input type="hidden" name="@remove@files" tal:attributes="value file/id">
+              <input type="hidden" name="@action" value="edit">
+              <input type="submit" value="remove" i18n:attributes="value">
+          </form>
+        </td>
+      </tr>
+    </table>
+
+    <div class='vspace-four'></div>
+    <tal:block tal:condition="context/id" tal:replace="structure context/history" />
+
+  </div> <!-- div tal:condition="context/is_view_ok" -->
+</div> <!-- content -->
+
+</tal:block>
+<!-- SHA: 2062c26eea817319014e013855d4574840cd784c -->

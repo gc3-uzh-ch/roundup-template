@@ -1,0 +1,19 @@
+<!--
+ This is the default body that is displayed when people visit the
+ tracker. The tag below lists the currently open issues. You may
+ replace it with a greeting message, or a different list of issues or
+ whatever. It's a good idea to have the issues on the front page though
+-->
+<span tal:replace="structure python:db.issue.renderWith('index',
+    sort=[('-', 'activity')], filter=['status'], group=[('+', 'priority')],
+    columns=['activity','title','creator', 'topics', 'status'],
+    filterspec={'status':['-1', '1', '2', '5', '7']})"
+      tal:condition="python: request.user.hasRole('Operator')" />
+
+<span tal:replace="structure python:db.issue.renderWith('index',
+    sort=[('-', 'activity')], filter=['status', 'creator'],
+    columns=['activity','title','creator', 'topics'],
+    filterspec={'status':['-1', '1', '2', '5', '7'],
+                'creator': request.user.id})"
+      tal:condition="python: not request.user.hasRole('Operator')" />
+
