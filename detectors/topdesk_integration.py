@@ -30,7 +30,7 @@ from roundup.mailer import Mailer
 re_forwarded = re.compile(
     r'Forwarding Incident (I-[0-9]+-[0-9]+) from TOPdesk@UZH:', re.I)
 
-replymessage_template = """\
+replymessage_template_full = """\
 From: %(mail_from)s
 Subject: %(mail_subject)s
 
@@ -48,6 +48,13 @@ You can access the ticket via web using the following URL:
 %(message)s
 
 ---------------------------------------------------------------------------
+"""
+
+replymessage_template = """\
+From: %(mail_from)s
+Subject: %(mail_subject)s
+
+%(issue_url)s
 """
 
 def topdesk_integration(db, cl, nodeid, oldvalues):
