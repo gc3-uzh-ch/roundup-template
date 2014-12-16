@@ -150,6 +150,7 @@ def topdesk_integration(db, cl, nodeid, oldvalues):
             mailer.smtp_send([mail_to], mail_body, sender=mail_from)
             log.info("Sent reply to %s for issue %s (%s)." % (
                 mail_to, nodeid, topdesk_id))
+            db.addjournal(db.issue.classname, nodeid, 'topdesk-notified', {})
         except Exception as ex:
             raise roundupdb.DetectorError(
                 "Error sending reply message for TOPDesk issue %s "
