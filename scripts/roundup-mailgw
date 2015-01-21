@@ -114,6 +114,8 @@ def __handle_ignore(self):
         if (self.message.getheader('subject', '').startswith('Usd{I') and
                 self.message.getheader('x-mailer','').startswith('TOPdesk')):
             self.logger.info("Ticket forwarded by servicedesk@id.uzh.ch")
+        elif self.message.getheader('From') == 'contact@s3it.uzh.ch':
+            self.logger.info("Ticket forwarded by contact@s3it.uzh.ch")
         else:
             self.logger.info("Rejecting message: it is auto-submitted")
             raise IgnoreLoop
