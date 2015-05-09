@@ -13,9 +13,10 @@ h1 {
 }
 
 .issue div .content {
-    border: #A8A8A8 solid 1px;
-    padding: 1em 1em 0em 1em;
     margin-bottom: 1em;
+}
+.issue div .content pre {
+  background-color: #fcfcfc;
 }
 .input-small { width: 5em; }
 .vspace-one { margin-top: 1em; }
