@@ -82,8 +82,8 @@
         <div class='row-fluid'>
           <div class="content">
             <pre tal:condition="python:msg.content.is_view_ok()"
-                 tal:replace="structure
-                 python:utils.localReplace(context.content.hyperlinked())">
+                 tal:content="structure
+                 python:utils.localReplace(msg.content.hyperlinked())">
               content
               </pre>
             <!-- <pre tal:condition="python:msg.content.is_view_ok()" -->
