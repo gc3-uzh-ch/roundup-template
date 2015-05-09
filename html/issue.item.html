@@ -82,7 +82,12 @@
         <div class='row-fluid'>
           <div class="content">
             <pre tal:condition="python:msg.content.is_view_ok()"
-               tal:replace="structure python:utils.markdown(msg.content.plain())">content</pre>
+                 tal:replace="structure
+                 python:utils.localReplace(context.content.hyperlinked())">
+              content
+              </pre>
+            <!-- <pre tal:condition="python:msg.content.is_view_ok()" -->
+            <!--    tal:replace="structure python:utils.markdown(msg.content.plain())">content</pre> -->
           </div>
 
           <tal:block tal:condition="python: [i for i in msg.files if
