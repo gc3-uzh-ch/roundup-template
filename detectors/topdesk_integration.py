@@ -93,13 +93,15 @@ def topdesk_integration(db, cl, nodeid, oldvalues):
 
     # one and only one message should be here.
     if len(msgids) > 1:
-        log.warning("Issue %s (forwarded from TOPDesk) has more than one"
-                    " message, which is wrong. Only parsing first message.",
+        log.warning("Issue %s has more than one message, which is wrong. "
+                    "Only parsing first message.",
                     nodeid)
     elif len(msgids) == 0:
-        raise roundupdb.DetectorError(
-            "Issue %s (forwarded from TOPDesk) has no messages."
-            " NOT sending a reply to TOPDesk" % nodeid)
+        # We don't know what to do with an issue with more than one message.
+        # Just skip it
+        log.warning("Issue %s has no message. Unable to check if it comes "
+                    "from TOPDesk. Skipping.")
+	return
 
     msgid = msgids[0]
     msg = db.msg.getnode(msgid)
