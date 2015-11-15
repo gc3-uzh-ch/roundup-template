@@ -18,6 +18,17 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+"""
+This reactor will notify an HipChat room every time an issue is created or modified.
+
+Configuration is needed for this detector, in `detectors/config.ini`:
+
+[hipchat]
+base_url = <base url of hipchat api>
+room = <room>
+token = <token>
+
+"""
 
 __docformat__ = 'reStructuredText'
 __author__ = 'Antonio Messina <antonio.s.messina@gmail.com>'
@@ -28,17 +39,9 @@ import json
 
 from ConfigParser import RawConfigParser
 
-room = 'https://s3it-uzh.hipchat.com/v2/room/2117986/notification'
-token = 'Mvl015EjyU0YRG3rObme9skhAKaaqFu1bOrcrI87'
-
 def notify_hipchat(db, msg):
     log = db.get_logger().getChild('hipchat')
     try:
-        # conf_file = os.path.join(db.config.detectors.HOME, 'hipchat_config.ini')
-        # cfg = RawConfigParser()
-        # cfg.read(conf_file)
-        # log.debug("Reading hipchat configuration file %s" % conf_file)
-
         cfg = db.config.detectors
         base_url = cfg['HIPCHAT_BASE_URL']
         room = cfg['HIPCHAT_ROOM']
