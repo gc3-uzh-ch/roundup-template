@@ -54,7 +54,7 @@ def notify_hipchat(db, msg, color=None):
         url = "%s/%s/notification?auth_token=%s" % (base_url, room, token)
         data = {'message': msg,
                 'notify': True}
-        if color:
+        if color is not None:
             data['color'] = color
         fmtdata = json.dumps(data)
         headers = {"Content-Type": "application/json"}
@@ -97,7 +97,7 @@ def issueupdate(db, cl, nodeid, oldvalues):
         else:
             old = 'None'
 
-        if newvalues['assignee']:
+        if issue.assignee:
             newuid = db.user.get(issue.assignee, 'username')
             newname = db.user.get(issue.assignee, 'realname')
             new = '%s (%s)' % (newuid, newname)
