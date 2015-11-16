@@ -72,7 +72,7 @@ def newissue(db, cl, nodeid, oldvalues):
               nodeid,
               db.user.get(issue.creator, 'username'),
               issue.title)
-    
+
     notify_hipchat(db, msg)
 
 
@@ -97,7 +97,7 @@ def issueupdate(db, cl, nodeid, oldvalues):
         msgid = issue.messages[-1]
         msg = db.msg.getnode(msgid)
         creator = db.user.get(msg.creator, 'username')
-        allmsg.append("new message from %s" % (creator))
+        allmsg.append("followup message from %s" % (creator))
 
     if issue.topics != oldvalues['topics']:
         old = [db.topic.get(topicid, 'name') for topicid in oldvalues['topics']]
