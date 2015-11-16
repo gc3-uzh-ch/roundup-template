@@ -116,7 +116,8 @@ def issueupdate(db, cl, nodeid, oldvalues):
         msgid = issue.messages[-1]
         msg = db.msg.getnode(msgid)
         creator = db.user.get(msg.creator, 'username')
-        allmsg.append("followup message from %s" % (creator))
+        creatorname = db.user.get(msg.creator, 'realname')
+        allmsg.append("followup message from %s (%s)" % (creator, creatorname))
 
     if issue.topics != oldvalues['topics']:
         old = [db.topic.get(topicid, 'name') for topicid in oldvalues['topics']]
