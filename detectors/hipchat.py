@@ -106,7 +106,7 @@ def issueupdate(db, cl, nodeid, oldvalues):
 
     if allmsg:
         # Prepend link to the issue
-        issuelink = """<a href="{0}issue{1}">issue{1}</a>: """.format(db.config.TRACKER_WEB, nodeid)
+        issuelink = """@all <a href="{0}issue{1}">issue{1}</a>: """.format(db.config.TRACKER_WEB, nodeid)
         # add "newlines"
         text = str.join('<br />', [issuelink + msg for msg in allmsg])
         notify_hipchat(db, text)
