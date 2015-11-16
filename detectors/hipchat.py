@@ -52,7 +52,7 @@ def notify_hipchat(db, msg):
 
     try:
         url = "%s/%s/notification?auth_token=%s" % (base_url, room, token)
-        data = json.dumps({'message': msg})
+        data = json.dumps({'message': msg, 'notify': True})
         headers = {"Content-Type": "application/json"}
         request = urllib2.Request(url, data=data, headers=headers)
 
@@ -106,7 +106,7 @@ def issueupdate(db, cl, nodeid, oldvalues):
 
     if allmsg:
         # Prepend link to the issue
-        issuelink = """@all <a href="{0}issue{1}">issue{1}</a>: """.format(db.config.TRACKER_WEB, nodeid)
+        issuelink = """<a href="{0}issue{1}">issue{1}</a>: """.format(db.config.TRACKER_WEB, nodeid)
         # add "newlines"
         text = str.join('<br />', [issuelink + msg for msg in allmsg])
         notify_hipchat(db, text)
