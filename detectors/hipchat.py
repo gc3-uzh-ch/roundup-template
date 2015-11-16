@@ -109,7 +109,7 @@ def issueupdate(db, cl, nodeid, oldvalues):
         old = db.status.get(oldvalues['status'], 'name')
         new = db.status.get(issue.status, 'name')
         allmsg.append("status: %s -> %s" % (old, new))
-        if issue.status == 'solved':
+        if db.issue.get(issue.status, 'name') == 'solved':
             color = 'green'
 
     if issue.messages != oldvalues['messages']:
