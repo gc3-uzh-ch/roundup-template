@@ -61,7 +61,7 @@ def notify_hipchat(db, msg, color=None):
         request = urllib2.Request(url, data=fmtdata, headers=headers)
 
         log.debug("Sending message to %s" % url)
-        response = urllib2.urlopen(request, data)
+        response = urllib2.urlopen(request, fmtdata)
         response.close()
 
     except Exception as ex:
