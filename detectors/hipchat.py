@@ -39,7 +39,7 @@ import json
 
 from ConfigParser import RawConfigParser
 
-def notify_hipchat(db, msg):
+def notify_hipchat(db, msg, color=None):
     log = db.get_logger().getChild('hipchat')
     try:
         cfg = db.config.detectors
@@ -52,9 +52,13 @@ def notify_hipchat(db, msg):
 
     try:
         url = "%s/%s/notification?auth_token=%s" % (base_url, room, token)
-        data = json.dumps({'message': msg, 'notify': True})
+        data = {'message': msg,
+                'notify': True}
+        if color:
+            data['color'] = color
+        fmtdata = json.dumps(data)
         headers = {"Content-Type": "application/json"}
-        request = urllib2.Request(url, data=data, headers=headers)
+        request = urllib2.Request(url, data=fmtdata, headers=headers)
 
         log.debug("Sending message to %s" % url)
         response = urllib2.urlopen(request, data)
@@ -73,25 +77,40 @@ def newissue(db, cl, nodeid, oldvalues):
               db.user.get(issue.creator, 'username'),
               issue.title)
 
-    notify_hipchat(db, msg)
+    notify_hipchat(db, msg, color='red')
 
 
 def issueupdate(db, cl, nodeid, oldvalues):
     issue = db.issue.getnode(nodeid)
     allmsg = []
 
+    color = None
+
     if issue.title != oldvalues['title']:
         allmsg.append('title: "<i>%s</i>" -> "<i>%s</i>"' % (oldvalues['title'], issue.title))
 
     if issue.assignee != oldvalues['assignee']:
-        old = db.user.get(oldvalues['assignee'], 'username') if oldvalues['assignee'] else 'None'
-        new = db.user.get(issue.assignee, 'username') if issue.assignee else 'None'
+        if oldvalues['assignee']:
+            olduid = db.user.get(oldvalues['assignee'], 'username')
+            oldname = db.user.get(oldvalues['assignee'], 'realname')
+            old = '%s (%s)' % (olduid, oldname)
+        else:
+            old = 'None'
+
+        if newvalues['assignee']:
+            newuid = db.user.get(issue.assignee, 'username')
+            newname = db.user.get(issue.assignee, 'realname')
+            new = '%s (%s)' % (newuid, newname)
+        else:
+            new = 'None'
         allmsg.append("assignee: %s -> %s" % (old, new))
 
     if issue.status != oldvalues['status']:
         old = db.status.get(oldvalues['status'], 'name')
         new = db.status.get(issue.status, 'name')
         allmsg.append("status: %s -> %s" % (old, new))
+        if issue.status == 'solved':
+            color = 'green'
 
     if issue.messages != oldvalues['messages']:
         msgid = issue.messages[-1]
@@ -106,10 +125,10 @@ def issueupdate(db, cl, nodeid, oldvalues):
 
     if allmsg:
         # Prepend link to the issue
-        issuelink = """<a href="{0}issue{1}">issue{1}</a>: """.format(db.config.TRACKER_WEB, nodeid)
+        issuelink = """<a href="{0}issue{1}">issue{1} ({2})</a>: """.format(db.config.TRACKER_WEB, nodeid, issue.title)
         # add "newlines"
         text = str.join('<br />', [issuelink + msg for msg in allmsg])
-        notify_hipchat(db, text)
+        notify_hipchat(db, text, color=color)
 
 def init(db):
     db.issue.react('create', newissue)
