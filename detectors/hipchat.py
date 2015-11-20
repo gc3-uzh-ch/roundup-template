@@ -86,6 +86,9 @@ def issueupdate(db, cl, nodeid, oldvalues):
 
     color = None
 
+    actor = db.user.get(issue.actor, 'username')
+    actorname = db.user.get(issue.actor, 'realname')
+
     if issue.title != oldvalues['title']:
         allmsg.append('title: "<i>%s</i>" -> "<i>%s</i>"' % (oldvalues['title'], issue.title))
 
@@ -103,12 +106,12 @@ def issueupdate(db, cl, nodeid, oldvalues):
             new = '%s (%s)' % (newuid, newname)
         else:
             new = 'None'
-        allmsg.append("assignee: %s -> %s" % (old, new))
+        allmsg.append("%s (%s) changed assignee: %s -> %s" % (actor, actorname, old, new))
 
     if issue.status != oldvalues['status']:
         old = db.status.get(oldvalues['status'], 'name')
         new = db.status.get(issue.status, 'name')
-        allmsg.append("status: %s -> %s" % (old, new))
+        allmsg.append("%s (%s) changed status: %s -> %s" % (actor, actorname, old, new))
         if db.status.get(issue.status, 'name') == 'solved':
             color = 'green'
 
@@ -122,8 +125,14 @@ def issueupdate(db, cl, nodeid, oldvalues):
     if issue.topics != oldvalues['topics']:
         old = [db.topic.get(topicid, 'name') for topicid in oldvalues['topics']]
         new = [db.topic.get(topicid, 'name') for topicid in issue.topics]
-        allmsg.append("topics: %s -> %s" % (str.join(', ', old), str.join(', ', new)))
+        allmsg.append("%s (%s) changed topics: %s -> %s" % (actor, actorname, str.join(', ', old), str.join(', ', new)))
 
+    if issue.nosy != oldvalues['nosy']:
+        old = [db.user.get(userid, 'username') for userid in oldvalues['nosy']]
+        new = [db.user.get(userid, 'username') for userid in issue.nosy]
+        allmsg.append("%s (%s) changed subscribers: %s -> %s" % (actor, actorname, str.join(', ', old), str.join(', ', new)))
+
+    # Actually send notification, if needed.
     if allmsg:
         # Prepend link to the issue
         issuelink = """<a href="{0}issue{1}">issue{1} ({2})</a>: """.format(db.config.TRACKER_WEB, nodeid, issue.title)
