@@ -83,11 +83,9 @@
           <div class="content">
             <pre tal:condition="python:msg.content.is_view_ok()"
                  tal:content="structure
-                 python:utils.localReplace(msg.content.hyperlinked())">
+                 python:utils.tprot(msg.content)">
               content
               </pre>
-            <!-- <pre tal:condition="python:msg.content.is_view_ok()" -->
-            <!--    tal:replace="structure python:utils.markdown(msg.content.plain())">content</pre> -->
           </div>
 
           <tal:block tal:condition="python: [i for i in msg.files if
