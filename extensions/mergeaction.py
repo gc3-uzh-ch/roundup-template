@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-# 
+# -*- coding: utf-8 -*-#
 # @(#)mergeaction.py
-# 
-# 
+#
+#
 # Copyright (C) 2014, GC3, University of Zurich. All rights reserved.
-# 
-# 
+#
+#
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
 # Free Software Foundation; either version 2 of the License, or (at your
@@ -44,10 +44,10 @@ class MergeAction(actions.Action):
         if not target_issue or target_issue == '':
             self.client.error_message.append('Unknown target issue')
             return
-        elif target_issue == source_issue:        
+        elif target_issue == source_issue:
             self.client.error_message.append('Cannot merge issue %s into myself (%s)' % (target_issue, source_issue))
             return
-        
+
         # get the message lists of the two issues
         source_messages = self.db.issue.get(source_issue, 'messages')
         target_messages = self.db.issue.get(target_issue, 'messages')
@@ -82,9 +82,9 @@ class MergeAction(actions.Action):
         self.db.issue.retire(source_issue)
         # commit all database changes
         self.db.commit()
-        # confirm the merge and redirect to the target issue      
-        raise Redirect, """%sissue%s?@ok_message=Merging of issue %s into issue
-        %s successful""" % (self.base, target_issue, source_issue, target_issue)
+        # confirm the merge and redirect to the target issue
+        raise Redirect, """{0}issue{1}?@ok_message=Merging of issue {2} into issue {1} successful""".format(
+            self.base, target_issue, source_issue)
 
 class UnmergeAction(actions.Action):
     def handle(self):
