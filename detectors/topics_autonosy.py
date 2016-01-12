@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-# 
+# -*- coding: utf-8 -*-#
 # @(#)topics_autonosy.py
-# 
-# 
+#
+#
 # Copyright (C) 2014, GC3, University of Zurich. All rights reserved.
-# 
-# 
+#
+#
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
 # Free Software Foundation; either version 2 of the License, or (at your
@@ -39,3 +39,4 @@ def topic_autoassign_nosy(db, cl, nodeid, newvalues):
 
 def init(db):
     db.issue.audit('create', topic_autoassign_nosy)
+    db.issue.audit('set', topic_autoassign_nosy)
