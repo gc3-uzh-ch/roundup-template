@@ -85,6 +85,10 @@ def issueupdate(db, cl, nodeid, oldvalues):
     allmsg = []
 
     color = None
+    if db.status.get(issue.status, 'name') == 'solved':
+        color = 'green'
+    elif db.status.get(issue.status, 'name') == 'new':
+        color = 'red'
 
     actor = db.user.get(issue.actor, 'username')
     actorname = db.user.get(issue.actor, 'realname')
@@ -112,8 +116,6 @@ def issueupdate(db, cl, nodeid, oldvalues):
         old = db.status.get(oldvalues['status'], 'name')
         new = db.status.get(issue.status, 'name')
         allmsg.append("%s (%s) changed status: %s -> %s" % (actor, actorname, old, new))
-        if db.status.get(issue.status, 'name') == 'solved':
-            color = 'green'
 
     if issue.messages != oldvalues['messages']:
         msgid = issue.messages[-1]
