@@ -31,7 +31,11 @@ def topic_autoassign_nosy(db, cl, nodeid, newvalues):
 
     for topicid in newvalues['topics']:
         nosylist = db.topic.get(topicid, 'autonosy')
-        curnosy = db.issue.get(nodeid, 'nosy')
+        try:
+            curnosy = db.issue.get(nodeid, 'nosy')
+        except:
+            # Could be a new issue
+            curnosy = []
         if nosylist:
             if 'nosy' not in newvalues:
                 newvalues['nosy'] = curnosy
