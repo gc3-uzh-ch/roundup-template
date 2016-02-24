@@ -129,7 +129,7 @@ def __handle_ignore(self):
 
 def __check_subject(self):
     if not self.subject:
-        self.subject = '<issue created by email with empty subject>'
+        self.subject = '*issue created by email with empty subject*'
 
 # MONKEY PATCHING! THIS IS BAD but it's also the only way to fix this
 parsedMessage.handle_ignore = __handle_ignore
