@@ -21,19 +21,19 @@ the message. Also note that:
 * empty lines are ignored, so that the following text::
 
       status: solved
-      
+
       topics: T1,T2,T3
 
   has the same effect than::
 
-      status: solved      
+      status: solved
       topics: T1,T2,T3
 
 * If the property is a ``Multilink`` (i.e. it's a link to multiple
   objects, like ``messages`` field), then ``<value>`` is split using
   commas (,) as field separator, leading and trailing spaces are
   removed from single fields, and the name is used to find the
-  corresponding value. 
+  corresponding value.
 
   For instance, if your ``issue`` class is defined as::
 
@@ -115,7 +115,7 @@ def properties_parser(db, cl, nodeid, newvalues):
 
     log = db.get_logger()
     # The following is a bit tricky:
-    # We need to ignore any *set* coming from a "real" set, 
+    # We need to ignore any *set* coming from a "real" set,
 
     contentlines = newvalues['content'].split('\n')
     mailcommands = []
@@ -125,7 +125,7 @@ def properties_parser(db, cl, nodeid, newvalues):
             # Empty line, just skip it
             continue
         match = re.search('^(?P<prop>[^:]*):\s*(?P<value>.*)', line, re.I)
-        
+
         if not match:
             # We are done parsing the input, this is a "regular"
             # comment line
@@ -148,7 +148,7 @@ def properties_parser(db, cl, nodeid, newvalues):
     newvalues['content'] = str.join('\n', contentlines).strip()
     if contentlines:
         newvalues['summary'] = contentlines[0]
-        
+
 
 def issue_properties_updater(db, cl, nodeid, newvalues):
     """This function parses the `mailcommands` field and will set issue
@@ -158,9 +158,10 @@ def issue_properties_updater(db, cl, nodeid, newvalues):
     if 'messages' not in newvalues or not newvalues['messages']:
         return
     log = db.get_logger()
-    
+
     messages = newvalues.get('messages')[:]
     if nodeid:
+        # Remove duplicate messages in current messages list
         oldmessages = db.issue.get(nodeid, 'messages')
         for msgid in oldmessages:
             if msgid in messages:
@@ -188,7 +189,7 @@ def issue_properties_updater(db, cl, nodeid, newvalues):
             if isinstance(propclass, roundup.hyperdb.Multilink):
                 propdb = db.getclass(propclass.classname)
                 # If at least one property name starts with +, all properties will be
-                # added. 
+                # added.
                 # Any property staritng with - will be removed.
                 all_props = [p.strip() for p in match.group('value').split(',')]
                 prop_del = sum([propdb.stringFind(**{propdb.key: p[1:]}) for p in all_props if p[0] == '-'],
@@ -202,7 +203,11 @@ def issue_properties_updater(db, cl, nodeid, newvalues):
                 if propname not in newvalues and nodeid:
                     cur_list = db.issue.get(nodeid, propname)
                 for i in prop_del:
-                    cur_list.remove(i)
+                    if i in cur_list:
+                        # Fix issue when we try to remove, e.g., an
+                        # user from the nosy list which is not in the
+                        # nosy list
+                        cur_list.remove(i)
                 if prop_del or prop_add:
                     for i in prop_add + prop_set:
                         cur_list.append(i)
@@ -256,4 +261,3 @@ def init(db):
     db.msg.audit('create', properties_parser)
     db.issue.audit('create', issue_properties_updater)
     db.issue.audit('set', issue_properties_updater)
-
