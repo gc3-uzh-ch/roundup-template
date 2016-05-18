@@ -5,38 +5,42 @@ from roundup import roundupdb, hyperdb
 def nosyreaction(db, cl, nodeid, oldvalues):
     ''' A standard detector is provided that watches for additions to the
         "messages" property.
-        
+
         When a new message is added, the detector sends it to all the users on
         the "nosy" list for the issue that are not already on the "recipients"
         list of the message.
-        
+
         Those users are then appended to the "recipients" property on the
         message, so multiple copies of a message are never sent to the same
         user.
-        
+
         The journal recorded by the hyperdatabase on the "recipients" property
-        then provides a log of when the message was sent to whom. 
+        then provides a log of when the message was sent to whom.
     '''
     # send a copy of all new messages to the nosy list
     messages = determineNewMessages(cl, nodeid, oldvalues)
+    issue = db.issue.getnode(nodeid)
+    spamstatus = db.status.lookup('spam')
     for msgid in messages:
         try:
-            cl.nosymessage(nodeid, msgid, oldvalues)
+            if issue.status != spamstatus:
+                cl.nosymessage(nodeid, msgid, oldvalues)
         except roundupdb.MessageSendError, message:
             raise roundupdb.DetectorError, message
 
     # If the issue was updated without an update message, `messages`
     # is empty.
     if not messages and oldvalues:
-        issue = db.issue.getnode(nodeid)
         try:
             # If assignee(s) have been updated, send the message
             # around.
             if issue.assignee != oldvalues['assignee'] or \
                issue.status != oldvalues.get('status', ''):
-                cl.nosymessage(nodeid, None, oldvalues)
+                if issue.status != spamstatus:
+                    # Only send message if 
+                    cl.nosymessage(nodeid, None, oldvalues)
         except roundupdb.MessageSendError, message:
-            raise roundupdb.DetectorError, message        
+            raise roundupdb.DetectorError, message
 
 def determineNewMessages(cl, nodeid, oldvalues):
     ''' Figure a list of the messages that are being added to the given
@@ -134,4 +138,3 @@ def init(db):
     db.issue.react('set', nosyreaction)
     db.issue.audit('create', updatenosy)
     db.issue.audit('set', updatenosy)
-
