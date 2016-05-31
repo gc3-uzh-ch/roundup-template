@@ -18,14 +18,17 @@ def nosyreaction(db, cl, nodeid, oldvalues):
         then provides a log of when the message was sent to whom.
     '''
     # send a copy of all new messages to the nosy list
+    log = db.get_logger().getChild('nosyreaction')
     messages = determineNewMessages(cl, nodeid, oldvalues)
     issue = db.issue.getnode(nodeid)
     spamstatus = db.status.lookup('spam')
     for msgid in messages:
         try:
             if issue.status != spamstatus:
+                log.info("Sending message for issue %s with update message %s", nodeid, msgid)
                 cl.nosymessage(nodeid, msgid, oldvalues)
         except roundupdb.MessageSendError, message:
+            log.error("Error while sending nosy reaction for msg id %s: %s", msgid, message)
             raise roundupdb.DetectorError, message
 
     # If the issue was updated without an update message, `messages`
@@ -37,9 +40,11 @@ def nosyreaction(db, cl, nodeid, oldvalues):
             if issue.assignee != oldvalues['assignee'] or \
                issue.status != oldvalues.get('status', ''):
                 if issue.status != spamstatus:
-                    # Only send message if 
+                    # Only send message if it's not spam
+                    log.info("Sending message for issue %s", nodeid)
                     cl.nosymessage(nodeid, None, oldvalues)
         except roundupdb.MessageSendError, message:
+            log.error("Error while sending messages for issue %s without update message: %s", nodeid, message)
             raise roundupdb.DetectorError, message
 
 def determineNewMessages(cl, nodeid, oldvalues):

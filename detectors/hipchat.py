@@ -65,7 +65,7 @@ def notify_hipchat(db, msg, color=None):
         response.close()
 
     except Exception as ex:
-        log.error("Unable to send message to hipchat: %s" % ex)
+        log.warning("Unable to send message to hipchat. Message was :%s, error: %s", msg, ex)
 
 
 def newissue(db, cl, nodeid, oldvalues):
