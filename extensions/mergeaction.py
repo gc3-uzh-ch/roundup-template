@@ -52,10 +52,10 @@ class MergeAction(actions.Action):
         source_messages = self.db.issue.get(source_issue, 'messages')
         target_messages = self.db.issue.get(target_issue, 'messages')
         # merge them
-        for msg in source_messages:
-            target_messages.append(msg)
+        newmessages = sorted(source_messages + target_messages)
+
         # update the target issue message list
-        self.db.issue.set(target_issue, messages=target_messages)
+        self.db.issue.set(target_issue, messages=newmessages)
 
         # get the file lists of the two issues
         source_files = self.db.issue.get(source_issue, 'files')
