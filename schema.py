@@ -49,7 +49,7 @@ project = Class(db, "project",
                 name=String(),
                 description=String())
 project.setkey("name")
-                
+
 
 # User-defined saved searches
 query = Class(db, "query",
@@ -86,6 +86,7 @@ msg = FileClass(db, "msg",
                 files=Multilink("file"),
                 messageid=String(),
                 inreplyto=String(),
+                quiet=Boolean(default_value=False),
                 mailcommands=String(),
  )
 
@@ -327,7 +328,7 @@ p = db.security.addPermission(name='Edit', klass='user', check=own_record,
                 'phone', 'organisation',
                 'alternate_addresses',
                 'queries',
-                'timezone')) # Note: 'roles' excluded - users should not be able to edit their own roles. 
+                'timezone')) # Note: 'roles' excluded - users should not be able to edit their own roles.
 db.security.addPermissionToRole('User', p)
 
 # Users should be able to edit and view their own queries. They should also
@@ -404,4 +405,3 @@ db.security.addPermissionToRole('Anonymous', 'Register', 'user')
 
 
 # vim: set filetype=python sts=4 sw=4 et si :
-

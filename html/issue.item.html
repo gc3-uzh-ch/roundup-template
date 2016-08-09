@@ -79,7 +79,10 @@
               i18n:name="date" /></span>
           </div>
         </div>
-        <div class='row-fluid'>
+        <div class='row-fluid' tal:attributes="class python:msg.quiet and 'alert'">
+          <span tal:condition="msg/quiet">
+            <b>Internal message</b>: This update was only sent to S3IT operators
+          </span>
           <div class="content">
             <pre tal:condition="python:msg.content.is_view_ok()"
                  tal:content="structure
@@ -160,7 +163,8 @@
                 </tal:block>
               </label>
               <textarea tal:content="request/form/@note/value | default"
-                      name="@note" rows="6" class='input-xxlarge'></textarea>
+                      name="@note" rows="6"
+                        class='input-xxlarge'></textarea>
             </div>
           </div> <!-- row-fluid -->
 
@@ -403,7 +407,15 @@
       <div class="form-actions" tal:condition="context/is_edit_ok">
         <input type="hidden" name="@template" value="item">
         <input type="hidden" name="@required" value="title">
-        <span tal:replace="structure context/submit">submit button</span>
+        <span tal:replace="structure context/submit">submit
+          button</span>
+        <tal:block condition="is_operator">
+          Internal message
+          <input type="radio" name="msg-1@quiet" id="quiet_no" value="no" checked="checked">
+          No
+          <input type="radio" name="msg-1@quiet" id="quiet_yes" value="yes">
+          Yes
+        </tal:block>
         <!-- <a tal:condition="context/id" tal:attributes="href context/copy_url" -->
         <!--  i18n:translate="" class='btn'>Make a copy</a> -->
       </div>

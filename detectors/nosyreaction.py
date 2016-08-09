@@ -25,8 +25,19 @@ def nosyreaction(db, cl, nodeid, oldvalues):
     for msgid in messages:
         try:
             if issue.status != spamstatus:
-                log.info("Sending message for issue %s with update message %s", nodeid, msgid)
-                cl.nosymessage(nodeid, msgid, oldvalues)
+                quiet = db.msg.get(msgid, 'quiet')
+                if quiet:
+                    # Need to update the recipients of the
+                    # message. cl.nosymessage() will only send
+                    # messages to people who are not member of the
+                    # msg.recipients attribute...
+                    msgrecipients = [i for i in issue.nosy if 'Operator' not in db.user.get(i, 'roles').split(',')]
+                    db.msg.set(msgid, recipients=msgrecipients)
+                    log.info("Sending INTERNAL message for issue %s with update message %s", nodeid, msgid)
+                    cl.nosymessage(nodeid, msgid, oldvalues)
+                else:
+                    log.info("Sending message for issue %s with update message %s", nodeid, msgid)
+                    cl.nosymessage(nodeid, msgid, oldvalues)
         except roundupdb.MessageSendError, message:
             log.error("Error while sending nosy reaction for msg id %s: %s", msgid, message)
             raise roundupdb.DetectorError, message
