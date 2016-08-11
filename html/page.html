@@ -19,13 +19,16 @@
     <link rel="stylesheet" href="@@file/bootstrap-markdown.js">
     <link rel="stylesheet" href="@@file/markdown.js">
     <link rel="stylesheet" href="@@file/github.css">
+    <link rel="stylesheet" href="@@file/jquery.tagit.css">
 
     <script tal:replace="structure request/base_javascript"></script>
     <script src="@@file/jquery-1.8.3.min.js"></script>
     <script src="@@file/jquery-ui.min.js"></script>
     <script src="@@file/bootstrap.min.js"></script>
+    <script src="@@file/tag-it.min.js"></script>
     <link rel="stylesheet"
-       href="@@file/jquery-ui.css">
+          href="@@file/jquery-ui.css">
+
     <script>
       $(document).ready(function(){
       $('.dropdown-toggle').dropdown();
@@ -36,6 +39,7 @@
       $( ".datepicker input" ).datepicker({ dateFormat: 'yy-mm-dd'});
       });
     </script>
+
     <metal:x define-slot="more-javascript" />
   </head>
   <body tal:attributes="class request/classname"

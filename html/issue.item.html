@@ -24,8 +24,21 @@
           <tal:x replace="context/id" i18n:name="id" /></span>
   </tal:block>
 
+  <metal:slot fill-slot="more-javascript"
+              tal:condition="python:request.user.hasRole('Operator');">
+    <tal:x    define="kw_ids db/keyword/list;
+                      all_keywords python:[str(i.name) for i in kw_ids]">
+    
+      <tal:lt replace="structure string:<script>" />
+    $(document).ready(function(){
+      $('#keywordTags').tagit({singleField: true, fieldName:
+      'extra_keywords', availableTags: <tal:x replace="all_keywords" />});
+      });    
+      <tal:lt replace="structure string:</script>" />
+    </tal:x>
+  </metal:slot>
 
-<div metal:fill-slot="content"
+  <div metal:fill-slot="content"
     tal:define="is_operator python:request.user.hasRole('Operator');" >
 
   <p class="alert alert-error"
@@ -381,25 +394,20 @@
               <div class="controls" tal:content="structure
               context/projects/menu">projects field</div>
             </div>
-          </tal:comment>
+            </tal:comment>
+            
             <!-- Keywords -->
-            <div class="control-group span6">
-              <label class="control-label"
-                     data-toggle="popover"
-                     data-placement="right"
-                     data-content="Keywords are usually used for
-                     reporting purposes.">Keywords:</label>
-              <div class="controls" tal:content="structure
-              python:context['keywords'].menu(height=5)">keywords</div>
-
-              <label class="control-label"
-                     data-toggle="popover"
-                     data-placement="top"
-                     data-content="A comma-separated list of keywords
-                     you want to add, both to this issue *and* to
-                     the list of available keywords.">Additional keywords:</label>
-              <div class="controls" tal:content="structure context/extra_keywords/field">projects field</div>
+            <div class="control-group span12">
+              <label class="control-label" data-toggle="popover"
+                     data-placement="bottom"
+                     data-content="Select one or more keywords">
+                Keywords
+              </label>
+              <ul id="keywordTags" class="controls">
+                <li tal:repeat="item context/keywords" tal:content="item/name" />
+              </ul>
             </div>
+            
           </div>
 
         </div> <!-- container-fluid -->

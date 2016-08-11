@@ -4,7 +4,7 @@ def add_keywords(db, cl, nodeid, newvalues):
     log = db.get_logger()
 
     log.debug("add_keywords: called with newvalues: %s, nodeid: %s" % (newvalues, nodeid))
-    
+
     if not newvalues.has_key('extra_keywords') or not newvalues['extra_keywords']:
         return
 
@@ -31,7 +31,7 @@ def add_keywords(db, cl, nodeid, newvalues):
             try:
                 keyword_id = db.keyword.lookup(keyword)
                 if keyword_id not in newvalues['keywords']:
-                    newvalues['keywords'].append(db.keyword.lookup(keyword_id))
+                    newvalues['keywords'].append(keyword_id)
             except KeyError:
                 # Key not found. Create one
                 log.debug("add_keywords: creating new keyword %s" % keyword)
