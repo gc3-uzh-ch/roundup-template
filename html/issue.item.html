@@ -369,6 +369,7 @@
           </div> <!-- row-fluid -->
 
           <div class="row-fluid" tal:condition="is_operator">
+            <tal:comment condition="nothing">
             <!-- Projects -->
             <div class="control-group span6">
               <label class="control-label" data-toggle="popover"
@@ -380,6 +381,7 @@
               <div class="controls" tal:content="structure
               context/projects/menu">projects field</div>
             </div>
+          </tal:comment>
             <!-- Keywords -->
             <div class="control-group span6">
               <label class="control-label"
@@ -398,7 +400,6 @@
                      the list of available keywords.">Additional keywords:</label>
               <div class="controls" tal:content="structure context/extra_keywords/field">projects field</div>
             </div>
-
           </div>
 
         </div> <!-- container-fluid -->

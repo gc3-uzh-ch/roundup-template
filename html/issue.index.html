@@ -31,7 +31,7 @@
    <th tal:condition="request/show/public"  i18n:translate="">Public</th>
    <th tal:condition="request/show/topics"  i18n:translate="">Topics</th>
    <th tal:condition="request/show/keywords"  i18n:translate="">Keywords</th>
-   <th tal:condition="python:is_operator and request.show['projects']"  i18n:translate="">Projects</th>
+   <th tal:condition="python:None and is_operator and request.show['projects']"  i18n:translate="">Projects</th>
    <th tal:condition="request/show/status"    i18n:translate="">Status</th>
    <th tal:condition="request/show/deadline"    i18n:translate="">Deadline</th>
    <th tal:condition="request/show/creator" i18n:translate="">Creator</th>
@@ -63,7 +63,7 @@
        tal:content="python:i.topics.plain() or default">&nbsp;</td>
    <td tal:condition="request/show/keywords"
        tal:content="python:i.keywords.plain() or default">&nbsp;</td>
-   <td tal:condition="python:is_operator and request.show['projects']"
+   <td tal:condition="python:None and is_operator and request.show['projects']"
        tal:content="python:i.projects.plain() or default">&nbsp;</td>
    <td tal:condition="request/show/status">
      <span tal:define="status_class python:'status-'+i.status.plain().replace(' ','-');"
