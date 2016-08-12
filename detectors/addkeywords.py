@@ -9,13 +9,11 @@ def add_keywords(db, cl, nodeid, newvalues):
         return
 
     log.debug('add_keywords: extra_keywords: %s' % newvalues.get('extra_keywords'))
+
+    # Since we use tag-it, now we always receive in this field the list of keywords we want.
+    newvalues['keywords'] = []
+    
     newkeywords = [k.strip() for k in newvalues.get('extra_keywords','').split(',')]
-    if 'keywords' not in newvalues:
-        if nodeid:
-            issue = db.issue.getnode(nodeid)
-            newvalues['keywords'] = issue.keywords
-        else:
-            newvalues['keywords'] = []
     for keyword in newkeywords:
         # Hacker extension: If the keyword begins with '-', it means
         # we want to *remove* it from the list of keywords.
@@ -45,4 +43,3 @@ def add_keywords(db, cl, nodeid, newvalues):
 def init(db):
     db.issue.audit('create', add_keywords)
     db.issue.audit('set', add_keywords, priority=110)
-
