@@ -130,6 +130,10 @@ def properties_parser(db, cl, nodeid, newvalues):
             # We are done parsing the input, this is a "regular"
             # comment line
             break
+        elif match.group('prop').lower() in ['internal', 'quiet', 'private']:
+            if match.group('value').lower() in ['yes', 'true']:
+                newvalues['quiet'] = True
+                contentlines.insert(0, '=== Internal message - this message was only sent to Roundup Operators ===\n')
         elif match.group('prop').lower() not in db.issue.properties:
             # Possibly a mispelled property. Just skip it
             continue
