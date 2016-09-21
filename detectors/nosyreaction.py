@@ -32,8 +32,10 @@ def nosyreaction(db, cl, nodeid, oldvalues):
                     # messages to people who are not member of the
                     # msg.recipients attribute...
                     msgrecipients = [i for i in issue.nosy if 'Operator' not in db.user.get(i, 'roles').split(',')]
-                    db.msg.set(msgid, recipients=msgrecipients)
+                    newcontent = '=== Internal message - this message was only sent to Roundup Operators ===\n\n' + db.msg.get(msgid, 'content')
+                    db.msg.set(msgid, recipients=msgrecipients, content=newcontent)
                     log.info("Sending INTERNAL message for issue %s with update message %s", nodeid, msgid)
+
                     cl.nosymessage(nodeid, msgid, oldvalues)
                 else:
                     log.info("Sending message for issue %s with update message %s", nodeid, msgid)
