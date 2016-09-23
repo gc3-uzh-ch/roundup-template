@@ -32,6 +32,14 @@
    Please login with your <a href="http://www.id.uzh.ch/dl/admin/itim/shortname.html">UZH shortname</a> and "webpass".</p>
 
   <div tal:condition="context/is_view_ok">
+    <p tal:define="issues python:
+                   db.issue.filter(filterspec={'messages':context.id})"
+       tal:condition="issues">
+      This message belongs to
+      <a tal:define="issueid python:issues[0].id"
+         tal:attributes="href string:issue${issueid}"
+         tal:content="string:issue${issueid}" />
+    </p>
     <dl class='dl-horizontal'>
       <dt i18n:translate="">Author</dt>
       <dd tal:content="context/author"></dd>
