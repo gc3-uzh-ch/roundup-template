@@ -92,8 +92,14 @@ def ldapuserauditor(db, cl, nodeid, newvalues):
                   newvalues['address'])
         return
         # raise Reject('User not found in LDAP database')
-    
+
+    # In some cases we might have 2 users with the same email. Cfr. asutter and kzihp
     user = users[0][1]
+    for u in users:
+        if newvalues.get('username') == u[1]['uid'][0]:
+            user = u[1]
+            break
+
     newvalues['username'] = user['uid'][0]
     aliasname = ''
     if aliasname_attribute in user:
