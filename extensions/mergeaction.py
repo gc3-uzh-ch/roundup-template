@@ -51,8 +51,11 @@ class MergeAction(actions.Action):
         # get the message lists of the two issues
         source_messages = self.db.issue.get(source_issue, 'messages')
         target_messages = self.db.issue.get(target_issue, 'messages')
-        # merge them
-        newmessages = sorted(source_messages + target_messages)
+
+        # Get an ordered list of messages, based on the 'date' attribute
+        newmessages = [db.msg.get(i) for i in set(source_messages + target_messages)]
+        newmessages.sort(key=lambda x: x.date)
+        newmessages = [i.id for i in newmessages]
 
         # update the target issue message list
         self.db.issue.set(target_issue, messages=newmessages)
