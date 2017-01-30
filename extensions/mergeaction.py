@@ -53,7 +53,7 @@ class MergeAction(actions.Action):
         target_messages = self.db.issue.get(target_issue, 'messages')
 
         # Get an ordered list of messages, based on the 'date' attribute
-        newmessages = [db.msg.get(i) for i in set(source_messages + target_messages)]
+        newmessages = [self.db.msg.getnode(i) for i in set(source_messages + target_messages)]
         newmessages.sort(key=lambda x: x.date)
         newmessages = [i.id for i in newmessages]
 
