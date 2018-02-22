@@ -129,6 +129,8 @@ def issueupdate(db, cl, nodeid, oldvalues):
         color = 'green'
     elif db.status.get(issue.status, 'name') == 'new':
         color = 'red'
+    elif db.status.get(issue.status, 'name') == 'wontfix':
+        color = 'gray'
 
     actor = db.user.get(issue.actor, 'username')
     actorname = db.user.get(issue.actor, 'realname')
