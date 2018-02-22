@@ -115,10 +115,9 @@ def notify_rocket(db, issue_id, msgs, color, body):
 def newissue(db, cl, nodeid, oldvalues):
     issue = db.issue.getnode(nodeid)
 
-    msg = "NEW issue{0} has been created by {1}: {2}".format(
-        nodeid, db.user.get(issue.creator, 'username'), issue.title)
+    msg = "NEW issue{0} has been created by {1}".format(nodeid, db.user.get(issue.creator, 'username'))
 
-    notify_rocket(db, nodeid, [msg], "red", "new issue")
+    notify_rocket(db, nodeid, [msg], "red", issue.title)
 
 
 def issueupdate(db, cl, nodeid, oldvalues):
@@ -179,7 +178,7 @@ def issueupdate(db, cl, nodeid, oldvalues):
 
     # Actually send notification, if needed.
     if allmsg:
-        notify_rocket(db, nodeid, allmsg, color, "updated issue")
+        notify_rocket(db, nodeid, allmsg, color, issue.title)
 
 
 def init(db):
