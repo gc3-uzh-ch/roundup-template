@@ -35,10 +35,10 @@ __docformat__ = 'reStructuredText'
 __author__ = 'Pim Witlox <pim.witlox@uzh.ch>'
 
 import json
-import urllib2
+import requests
 
 
-def notify_rocket(db, msg, color=None):
+def notify_rocket(db, issue_id, msgs, color, body):
     log = db.get_logger().getChild('rocketchat')
     try:
         cfg = db.config.detectors
@@ -61,60 +61,71 @@ def notify_rocket(db, msg, color=None):
             "username": user,
             "password": token
         }
-        login_response = json.loads(urllib2.urlopen(urllib2.Request(login_uri, data=json.dumps(login_data), headers=headers)))
-        if login_response["status"] == "success":
+        login_response = requests.post(login_uri, data=json.dumps(login_data), headers=headers)
+        if login_response.status_code != 200:
+            raise Exception("failed to login to {0} ({1}): {2}".format(
+                login_uri, login_response.status_code, login_response.text))
+        login_data = json.loads(login_response.text)
+        if login_data["status"] == "success":
             log.debug("successfully logged in on {0}".format(base_url))
         else:
-            raise Exception("failed to login on {0}: {1}".format(base_url, login_response))
-        auth_token = login_response["data"]["authToken"]
-        user_id = login_response["data"]["userId"]
+            raise Exception("failed to login on {0}: {1}".format(base_url, login_data))
 
-        headers["X-Auth-Token"] = auth_token
-        headers["X-User-Id"] = user_id
+        headers["X-Auth-Token"] = login_data["data"]["authToken"]
+        headers["X-User-Id"] = login_data["data"]["userId"]
 
         issue_data = {
             "roomId": room_id,
             "channel": channel,
-            "text": msg,
-            "attachments": []
+            "text": "\n".join(msgs),
+            "attachments": [{
+                "title": "issue{0}".format(issue_id),
+                "title_link": "{0}issue{1}".format(db.config.TRACKER_WEB, issue_id),
+                "text": body,
+                "color": color
+            }]
         }
-        if color is not None:
-            issue_data["attachments"]["color"] = color
-        issue_response = json.loads(urllib2.urlopen(urllib2.Request(post_message_uri, data=json.dumps(issue_data), headers=headers)))
-        if issue_response["status"] == "success":
+
+        issue_response = requests.post(post_message_uri, data=json.dumps(issue_data), headers=headers)
+        if issue_response.status_code != 200:
+            raise Exception("failed to post issue to {0} ({1}): {2}".format(
+                post_message_uri, issue_response.status_code, issue_response.text))
+        issue_data = json.loads(issue_response.text)
+        if issue_data["success"]:
             log.debug("successfully sent message {0} to {1} ({2})".format(issue_data, base_url, channel))
         else:
-            raise Exception("failed send message to {0} ({1}): {2}".format(base_url, channel, issue_response))
+            raise Exception("failed send message to {0} ({1}): {2}".format(base_url, channel, issue_data))
 
         del headers["Content-Type"]
 
-        logout_response = json.loads(urllib2.urlopen(urllib2.Request(logout_uri, headers=headers)))
-        if logout_response["status"] == "success":
+        logout_response = requests.post(logout_uri, headers=headers)
+        if logout_response.status_code != 200:
+            raise Exception("failed to logout to {0} ({1}): {2}".format(
+                logout_uri, logout_response.status_code, logout_response.text))
+        logout_data = json.loads(logout_response.text)
+        if logout_data["status"] == "success":
             log.debug("successfully logged out of {0}".format(base_url))
         else:
-            raise Exception("failed to logout from {0}: {1}".format(base_url, logout_response))
+            raise Exception("failed to logout from {0}: {1}".format(base_url, logout_data))
 
     except Exception as ex:
-        log.warning("Unable to send message to rocketchat. Message was :%s, error: %s", msg, ex)
+        log.warning("Unable to send message to rocketchat. error: %s", ex)
 
 
 def newissue(db, cl, nodeid, oldvalues):
     issue = db.issue.getnode(nodeid)
 
-    msg = """NEW <a href="{0}issue{1}">issue{1}</a> has been created by {2}.
-"<i>{3}</i>" """.format(db.config.TRACKER_WEB,
-              nodeid,
-              db.user.get(issue.creator, 'username'),
-              issue.title)
+    msg = "NEW issue{0} has been created by {1}: {2}".format(
+        nodeid, db.user.get(issue.creator, 'username'), issue.title)
 
-    notify_rocket(db, msg, color='red')
+    notify_rocket(db, nodeid, [msg], "red", "new issue")
 
 
 def issueupdate(db, cl, nodeid, oldvalues):
     issue = db.issue.getnode(nodeid)
     allmsg = []
 
-    color = None
+    color = 'yellow'
     if db.status.get(issue.status, 'name') == 'solved':
         color = 'green'
     elif db.status.get(issue.status, 'name') == 'new':
@@ -124,56 +135,53 @@ def issueupdate(db, cl, nodeid, oldvalues):
     actorname = db.user.get(issue.actor, 'realname')
 
     if issue.title != oldvalues['title']:
-        allmsg.append('title: "<i>%s</i>" -> "<i>%s</i>"' % (oldvalues['title'], issue.title))
+        allmsg.append("title: {0} -> {1}".format(oldvalues['title'], issue.title))
 
     if issue.assignee != oldvalues['assignee']:
         if oldvalues['assignee']:
             olduid = db.user.get(oldvalues['assignee'], 'username')
             oldname = db.user.get(oldvalues['assignee'], 'realname')
-            old = '%s (%s)' % (olduid, oldname)
+            old = "{0} ({1})".format(olduid, oldname)
         else:
             old = 'None'
 
         if issue.assignee:
             newuid = db.user.get(issue.assignee, 'username')
             newname = db.user.get(issue.assignee, 'realname')
-            new = '%s (%s)' % (newuid, newname)
+            new = "{0} ({1})".format(newuid, newname)
         else:
             new = 'None'
-        allmsg.append("%s (%s) changed assignee: %s -> %s" % (actor, actorname, old, new))
+        allmsg.append("{0} ({1}) changed assignee: {2} -> {3}".format(actor, actorname, old, new))
 
     if issue.status != oldvalues['status']:
         old = db.status.get(oldvalues['status'], 'name')
         new = db.status.get(issue.status, 'name')
-        allmsg.append("%s (%s) changed status: %s -> %s" % (actor, actorname, old, new))
+        allmsg.append("{0} ({1}) changed status: {2} -> {3}".format(actor, actorname, old, new))
 
     if issue.messages != oldvalues['messages']:
         msgid = issue.messages[-1]
         msg = db.msg.getnode(msgid)
         creator = db.user.get(msg.creator, 'username')
         creatorname = db.user.get(msg.creator, 'realname')
-        allmsg.append("followup message from %s (%s)" % (creator, creatorname))
+        allmsg.append("followup message from {0} ({1})".format(creator, creatorname))
 
     if issue.topics != oldvalues['topics']:
         old = [db.topic.get(topicid, 'name') for topicid in oldvalues['topics']]
         new = [db.topic.get(topicid, 'name') for topicid in issue.topics]
-        allmsg.append("%s (%s) changed topics: %s -> %s" % (actor, actorname, str.join(', ', old), str.join(', ', new)))
+        allmsg.append("{0} ({1}) changed topics: {2} -> {3}".format(
+            actor, actorname, str.join(', ', old), str.join(', ', new)))
 
     if issue.nosy != oldvalues['nosy']:
         old = [db.user.get(userid, 'username') for userid in oldvalues['nosy']]
         new = [db.user.get(userid, 'username') for userid in issue.nosy]
-        allmsg.append("%s (%s) changed subscribers: %s -> %s" % (actor, actorname, str.join(', ', old), str.join(', ', new)))
+        allmsg.append("{0} ({1}) changed subscribers: {2} -> {3}".format(
+            actor, actorname, str.join(', ', old), str.join(', ', new)))
 
     # Actually send notification, if needed.
     if allmsg:
-        # Prepend link to the issue
-        issuelink = """<a href="{0}issue{1}">issue{1} ({2})</a>: """.format(db.config.TRACKER_WEB, nodeid, issue.title)
-        # add "newlines"
-        text = str.join('<br />', [issuelink + msg for msg in allmsg])
-        notify_rocket(db, text, color=color)
+        notify_rocket(db, nodeid, allmsg, color, "updated issue")
 
 
 def init(db):
     db.issue.react('create', newissue)
     db.issue.react('set', issueupdate)
-    
