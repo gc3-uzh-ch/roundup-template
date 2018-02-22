@@ -35,7 +35,7 @@ __docformat__ = 'reStructuredText'
 __author__ = 'Pim Witlox <pim.witlox@uzh.ch>'
 
 import json
-import requests
+import urllib2
 
 
 def notify_rocket(db, msg, color=None):
@@ -61,7 +61,7 @@ def notify_rocket(db, msg, color=None):
             "username": user,
             "password": token
         }
-        login_response = json.loads(requests.post(login_uri, data=json.dumps(login_data), headers=headers))
+        login_response = json.loads(urllib2.urlopen(urllib2.Request(login_uri, data=json.dumps(login_data), headers=headers)))
         if login_response["status"] == "success":
             log.debug("successfully logged in on {0}".format(base_url))
         else:
@@ -80,7 +80,7 @@ def notify_rocket(db, msg, color=None):
         }
         if color is not None:
             issue_data["attachments"]["color"] = color
-        issue_response = json.loads(requests.post(post_message_uri, data=json.dumps(issue_data), headers=headers))
+        issue_response = json.loads(urllib2.urlopen(urllib2.Request(post_message_uri, data=json.dumps(issue_data), headers=headers)))
         if issue_response["status"] == "success":
             log.debug("successfully sent message {0} to {1} ({2})".format(issue_data, base_url, channel))
         else:
@@ -88,7 +88,7 @@ def notify_rocket(db, msg, color=None):
 
         del headers["Content-Type"]
 
-        logout_response = json.loads(requests.post(logout_uri, headers=headers))
+        logout_response = json.loads(urllib2.urlopen(urllib2.Request(logout_uri, headers=headers)))
         if logout_response["status"] == "success":
             log.debug("successfully logged out of {0}".format(base_url))
         else:
@@ -176,3 +176,4 @@ def issueupdate(db, cl, nodeid, oldvalues):
 def init(db):
     db.issue.react('create', newissue)
     db.issue.react('set', issueupdate)
+    
