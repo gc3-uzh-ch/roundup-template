@@ -77,11 +77,9 @@ def notify_rocket(db, issue_id, msgs, color, body):
         issue_data = {
             "roomId": room_id,
             "channel": channel,
-            "text": "\n".join(msgs),
+            "text": "{0}issue{1} > {2}".format(db.config.TRACKER_WEB, issue_id, body),
             "attachments": [{
-                "title": "issue{0}".format(issue_id),
-                "title_link": "{0}issue{1}".format(db.config.TRACKER_WEB, issue_id),
-                "text": body,
+                "text": "\n".join(msgs),
                 "color": color
             }]
         }
