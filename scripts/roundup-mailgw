@@ -118,7 +118,10 @@ def __handle_ignore(self):
             self.logger.info("Ticket forwarded by servicedesk@id.uzh.ch")
         elif (self.message.getheader('to', '') == 'contact@s3it.uzh.ch' or
               '<contact@s3it.uzh.ch>' in self.message.getheader('to', '')):
-            self.logger.info("Ticket forwarded by contact@s3it.uzh.ch")
+            self.logger.info("Ticket forwarded by contact@s3it.uzh.ch (to)")
+        elif (self.message.getheader('cc', '') == 'contact@s3it.uzh.ch' or
+              '<contact@s3it.uzh.ch>' in self.message.getheader('cc', '')):
+            self.logger.info("Ticket forwarded by contact@s3it.uzh.ch (cc)")
         else:
             self.logger.info("Rejecting message from %s: it is auto-submitted"
                              % self.message.getheader('From','xxx'))
