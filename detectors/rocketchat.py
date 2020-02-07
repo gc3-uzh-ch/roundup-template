@@ -151,6 +151,10 @@ def issueupdate(db, cl, nodeid, oldvalues):
         else:
             new = 'None'
         allmsg.append("{0} ({1}) changed assignee: {2} -> {3}".format(actor, actorname, old, new))
+        # When changing assignee change the notification body and append a mention
+        body = "{0} assigned to @{1}".format(issue.title, newuid)
+    else:
+        body = issue.title
 
     if issue.status != oldvalues['status']:
         old = db.status.get(oldvalues['status'], 'name')
@@ -178,7 +182,7 @@ def issueupdate(db, cl, nodeid, oldvalues):
 
     # Actually send notification, if needed.
     if allmsg:
-        notify_rocket(db, nodeid, allmsg, color, issue.title)
+        notify_rocket(db, nodeid, allmsg, color, body)
 
 
 def init(db):
