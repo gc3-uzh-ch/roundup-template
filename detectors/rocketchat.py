@@ -130,13 +130,13 @@ def issueupdate(db, cl, nodeid, oldvalues):
     elif db.status.get(issue.status, 'name') == 'spam':
         color = 'white'
     elif db.status.get(issue.status, 'name') == 'wontfix':
-        color = 'violet'
+        color = 'darkslateblue'
     elif db.status.get(issue.status, 'name') == 'invalid':
-        color = 'magenta'
+        color = 'darkorchid'
     elif db.status.get(issue.status, 'name') == 'waiting':
-        color = 'cyan'
+        color = 'deepskyblue'
     elif db.status.get(issue.status, 'name') == 'on hold':
-        color = 'azure'
+        color = 'steelblue'
 
     actor = db.user.get(issue.actor, 'username')
     actorname = db.user.get(issue.actor, 'realname')
