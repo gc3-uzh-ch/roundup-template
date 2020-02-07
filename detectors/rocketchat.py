@@ -168,6 +168,9 @@ def issueupdate(db, cl, nodeid, oldvalues):
         old = db.status.get(oldvalues['status'], 'name')
         new = db.status.get(issue.status, 'name')
         allmsg.append("{0} ({1}) changed status: {2} -> {3}".format(actor, actorname, old, new))
+    elif issue.status == 'solved':
+        uid = db.user.get(issue.assignee, 'username')
+        body = "@{0} solved issue: {1} has activity".format(uid, issue.title)
 
     if issue.messages != oldvalues['messages']:
         msgid = issue.messages[-1]
