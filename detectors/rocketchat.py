@@ -127,8 +127,16 @@ def issueupdate(db, cl, nodeid, oldvalues):
         color = 'green'
     elif db.status.get(issue.status, 'name') == 'new':
         color = 'red'
+    elif db.status.get(issue.status, 'name') == 'spam':
+        color = 'white'
     elif db.status.get(issue.status, 'name') == 'wontfix':
-        color = 'gray'
+        color = 'violet'
+    elif db.status.get(issue.status, 'name') == 'invalid':
+        color = 'magenta'
+    elif db.status.get(issue.status, 'name') == 'waiting':
+        color = 'cyan'
+    elif db.status.get(issue.status, 'name') == 'on hold':
+        color = 'azure'
 
     actor = db.user.get(issue.actor, 'username')
     actorname = db.user.get(issue.actor, 'realname')
